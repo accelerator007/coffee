@@ -42,12 +42,14 @@ export default async function AdminPage() {
       <main className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-brand">{t('dashboard', lang)}</h1>
-          <Link
-            href="/admin/customers"
-            className="text-sm text-brand underline"
-          >
-            {t('customers', lang)} ←
-          </Link>
+          <div className="flex gap-4">
+            <Link href="/admin/create-user" className="text-sm text-brand underline">
+              {lang === 'ar' ? '+ إنشاء حساب' : '+ Create Account'}
+            </Link>
+            <Link href="/admin/customers" className="text-sm text-brand underline">
+              {t('customers', lang)} ←
+            </Link>
+          </div>
         </div>
 
         {/* KPI Grid */}
