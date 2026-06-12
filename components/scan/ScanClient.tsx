@@ -22,28 +22,39 @@ export default function ScanClient({ lang }: { lang: Lang }) {
 
   const handleScan = useCallback(async (value: string) => {
     setState('loading')
-    const result = await getCustomerByQR(value)
-    if ('error' in result && result.error === 'invalid_qr') {
-      setErrorMsg(t('invalidQR', lang))
+    try {
+      const result = await getCustomerByQR(value.trim())
+      if ('error' in result && result.error === 'invalid_qr') {
+        setErrorMsg(t('invalidQR', lang))
+        setState('error')
+        return
+      }
+      setData(result)
+      setState('result')
+    } catch {
+      setErrorMsg(lang === 'ar' ? 'حدث خطأ، حاول مجدداً' : 'Something went wrong, try again')
       setState('error')
-      return
     }
-    setData(result)
-    setState('result')
   }, [lang])
 
   async function handleRecord() {
     if (!data?.subscription || !data?.customer) return
     setRecording(true)
-    const result = await recordRedemption(data.subscription.id, data.customer.id)
-    setRecording(false)
-    if ('error' in result) {
-      if (result.error === 'limit_reached') setErrorMsg(t('limitReached', lang))
-      else if (result.error === 'expired') setErrorMsg(lang === 'ar' ? 'الاشتراك منتهي' : 'Subscription expired')
-      else setErrorMsg(t('error', lang))
+    try {
+      const result = await recordRedemption(data.subscription.id, data.customer.id)
+      setRecording(false)
+      if ('error' in result) {
+        if (result.error === 'limit_reached') setErrorMsg(t('limitReached', lang))
+        else if (result.error === 'expired') setErrorMsg(lang === 'ar' ? 'الاشتراك منتهي' : 'Subscription expired')
+        else setErrorMsg(t('error', lang))
+        setState('error')
+      } else {
+        setState('success')
+      }
+    } catch {
+      setRecording(false)
+      setErrorMsg(lang === 'ar' ? 'حدث خطأ، حاول مجدداً' : 'Something went wrong, try again')
       setState('error')
-    } else {
-      setState('success')
     }
   }
 
