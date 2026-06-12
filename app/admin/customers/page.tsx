@@ -21,14 +21,11 @@ export default async function CustomersPage() {
     .eq('id', user.id)
     .single()
 
-  // Load all customers initially
-  const { data } = await supabase.rpc('admin_customer_detail', { search: null })
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <AdminPageClient userName={profile?.full_name} lang={lang} />
       <main className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full flex flex-col gap-4">
-        <CustomersClient lang={lang} initialData={data ?? []} />
+        <CustomersClient lang={lang} />
       </main>
     </div>
   )
