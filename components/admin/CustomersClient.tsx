@@ -2,22 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { searchCustomers } from '@/app/admin/customers/actions'
 import { Lang, t } from '@/lib/i18n'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 
-interface CustomerRow {
-  id: string
-  full_name: string
-  phone: string
-  created_at: string
-  // from subscription join
-  package_name?: string
-  status?: 'active' | 'expired'
-  days_left?: number
-  times_used?: number
-}
+type CustomerRow = Awaited<ReturnType<typeof searchCustomers>>[number]
 
 export default function CustomersClient({ lang }: { lang: Lang }) {
   const [query, setQuery] = useState('')
@@ -26,42 +16,8 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
 
   const search = useCallback(async (q: string) => {
     setLoading(true)
-    const supabase = createClient()
-
-    // First try the RPC for customers with subscriptions
-    const { data: rpcData } = await supabase.rpc('admin_customer_detail', { search: q || null })
-
-    // Also get ALL customers from profiles directly
-    let profileQuery = supabase
-      .from('profiles')
-      .select('id, full_name, phone, created_at')
-      .eq('role', 'customer')
-      .order('created_at', { ascending: false })
-
-    if (q) {
-      profileQuery = profileQuery.or(`full_name.ilike.%${q}%,phone.ilike.%${q}%`)
-    }
-
-    const { data: profiles } = await profileQuery
-
-    // Merge: start with all profiles, enrich with RPC data if available
-    const rpcMap = new Map((rpcData ?? []).map((r: { customer_id: string }) => [r.customer_id, r]))
-
-    const merged: CustomerRow[] = (profiles ?? []).map((p) => {
-      const rpc = rpcMap.get(p.id) as { package_name?: string; status?: string; days_left?: number; times_used?: number } | undefined
-      return {
-        id: p.id,
-        full_name: p.full_name,
-        phone: p.phone,
-        created_at: p.created_at,
-        package_name: rpc?.package_name,
-        status: rpc?.status as 'active' | 'expired' | undefined,
-        days_left: rpc?.days_left,
-        times_used: rpc?.times_used,
-      }
-    })
-
-    setData(merged)
+    const result = await searchCustomers(q)
+    setData(result)
     setLoading(false)
   }, [])
 
@@ -93,7 +49,7 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
       </div>
 
       <Card className="p-0 overflow-hidden">
-        {data.length === 0 && !loading ? (
+        {!loading && data.length === 0 ? (
           <p className="text-center text-text-muted py-8">
             {lang === 'ar' ? 'لا توجد نتائج' : 'No results found'}
           </p>
@@ -115,7 +71,11 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
                   <tr key={row.id} className="border-b border-border/50 hover:bg-muted/50">
                     <td className="py-3 px-3 font-medium">{row.full_name || '—'}</td>
                     <td className="py-3 px-3 font-mono text-xs" dir="ltr">{row.phone ?? '—'}</td>
-                    <td className="py-3 px-3">{row.package_name ?? <span className="text-text-muted text-xs">{lang === 'ar' ? 'بدون اشتراك' : 'No subscription'}</span>}</td>
+                    <td className="py-3 px-3">
+                      {row.package_name ?? (
+                        <span className="text-text-muted text-xs">{lang === 'ar' ? 'بدون اشتراك' : 'No subscription'}</span>
+                      )}
+                    </td>
                     <td className="py-3 px-3">
                       {row.status
                         ? <Badge status={row.status} label={t(row.status, lang)} />
