@@ -7,6 +7,12 @@ function getMuscatDate() {
 }
 
 export async function getCustomerByQR(customerId: string) {
+  // Validate that customerId looks like a UUID before querying
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!uuidPattern.test(customerId)) {
+    return { error: 'invalid_qr' as const }
+  }
+
   const supabase = await createClient()
 
   const { data: profile, error: profileError } = await supabase
