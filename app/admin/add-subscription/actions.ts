@@ -21,7 +21,12 @@ export async function getPackages() {
   return data ?? []
 }
 
-export async function addSubscription(customerId: string, packageId: string, startDate: string) {
+export async function addSubscription(
+  customerId: string,
+  packageId: string,
+  startDate: string,
+  nfcCardId?: string
+) {
   const supabase = await createClient()
 
   // Get package to snapshot duration_days
@@ -38,6 +43,7 @@ export async function addSubscription(customerId: string, packageId: string, sta
     package_id: packageId,
     start_date: startDate,
     duration_days: pkg.duration_days,
+    nfc_card_id: nfcCardId?.trim() || null,
   })
 
   if (error) return { error: error.message }

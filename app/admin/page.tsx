@@ -49,6 +49,9 @@ export default async function AdminPage() {
             <Link href="/admin/add-subscription" className="text-sm text-brand underline">
               {lang === 'ar' ? '+ اشتراك' : '+ Subscribe'}
             </Link>
+            <Link href="/admin/packages" className="text-sm text-brand underline">
+              {lang === 'ar' ? 'الباقات' : 'Packages'}
+            </Link>
             <Link href="/admin/customers" className="text-sm text-brand underline">
               {t('customers', lang)} ←
             </Link>

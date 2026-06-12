@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Lang } from '@/lib/i18n'
 import { addSubscription } from './actions'
 import Button from '@/components/ui/Button'
@@ -13,19 +14,22 @@ interface Props {
   lang: Lang
   customers: Customer[]
   packages: Package[]
+  preselectedCustomer?: string
 }
 
-export default function AddSubscriptionClient({ lang, customers, packages }: Props) {
+export default function AddSubscriptionClient({ lang, customers, packages, preselectedCustomer }: Props) {
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Muscat' })
 
-  const [customerId, setCustomerId] = useState('')
+  const [customerId, setCustomerId] = useState(preselectedCustomer ?? '')
   const [packageId, setPackageId] = useState('')
   const [startDate, setStartDate] = useState(today)
+  const [nfcCardId, setNfcCardId] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
   const selectedPkg = packages.find(p => p.id === packageId)
+  const noPackages = packages.length === 0
 
   async function handleSubmit() {
     setError('')
@@ -35,7 +39,7 @@ export default function AddSubscriptionClient({ lang, customers, packages }: Pro
       return
     }
     setLoading(true)
-    const result = await addSubscription(customerId, packageId, startDate)
+    const result = await addSubscription(customerId, packageId, startDate, nfcCardId)
     if ('error' in result && result.error) {
       setError(result.error)
     } else {
@@ -43,6 +47,7 @@ export default function AddSubscriptionClient({ lang, customers, packages }: Pro
       setCustomerId('')
       setPackageId('')
       setStartDate(today)
+      setNfcCardId('')
     }
     setLoading(false)
   }
@@ -69,7 +74,7 @@ export default function AddSubscriptionClient({ lang, customers, packages }: Pro
         {/* Package */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium">{lang === 'ar' ? 'الباقة' : 'Package'}</label>
-          <select value={packageId} onChange={e => setPackageId(e.target.value)} className={selectClass}>
+          <select value={packageId} onChange={e => setPackageId(e.target.value)} className={selectClass} disabled={noPackages}>
             <option value="">{lang === 'ar' ? '— اختر باقة —' : '— Select package —'}</option>
             {packages.map(p => (
               <option key={p.id} value={p.id}>
@@ -77,6 +82,14 @@ export default function AddSubscriptionClient({ lang, customers, packages }: Pro
               </option>
             ))}
           </select>
+          {noPackages && (
+            <p className="text-sm text-text-muted">
+              {lang === 'ar' ? 'لا توجد باقات. ' : 'No packages yet. '}
+              <Link href="/admin/packages" className="text-brand underline">
+                {lang === 'ar' ? 'أضف باقة أولاً' : 'Add a package first'}
+              </Link>
+            </p>
+          )}
         </div>
 
         {/* Package preview */}
@@ -95,6 +108,22 @@ export default function AddSubscriptionClient({ lang, customers, packages }: Pro
             type="date"
             value={startDate}
             onChange={e => setStartDate(e.target.value)}
+            className={selectClass}
+            dir="ltr"
+          />
+        </div>
+
+        {/* NFC card */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium">
+            {lang === 'ar' ? 'رقم بطاقة NFC' : 'NFC Card Number'}
+            <span className="text-text-muted font-normal"> ({lang === 'ar' ? 'اختياري' : 'optional'})</span>
+          </label>
+          <input
+            type="text"
+            value={nfcCardId}
+            onChange={e => setNfcCardId(e.target.value)}
+            placeholder={lang === 'ar' ? 'مرّر البطاقة أو اكتب الرقم' : 'Tap card or type number'}
             className={selectClass}
             dir="ltr"
           />
