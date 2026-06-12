@@ -44,7 +44,10 @@ export default async function AdminPage() {
           <h1 className="text-xl font-bold text-brand">{t('dashboard', lang)}</h1>
           <div className="flex gap-4">
             <Link href="/admin/create-user" className="text-sm text-brand underline">
-              {lang === 'ar' ? '+ إنشاء حساب' : '+ Create Account'}
+              {lang === 'ar' ? '+ حساب' : '+ Account'}
+            </Link>
+            <Link href="/admin/add-subscription" className="text-sm text-brand underline">
+              {lang === 'ar' ? '+ اشتراك' : '+ Subscribe'}
             </Link>
             <Link href="/admin/customers" className="text-sm text-brand underline">
               {t('customers', lang)} ←
