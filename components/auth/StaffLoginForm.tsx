@@ -11,7 +11,7 @@ export default function StaffLoginForm({ lang }: { lang: Lang }) {
   const router = useRouter()
   const supabase = createClient()
 
-  const [username, setUsername] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -19,14 +19,15 @@ export default function StaffLoginForm({ lang }: { lang: Lang }) {
   async function handleLogin() {
     setError('')
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({
-      email: `${username}@internal.local`,
-      password,
-    })
+
+    // Support both real email and username (appends @internal.local)
+    const email = identifier.includes('@') ? identifier : `${identifier}@internal.local`
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      setError(lang === 'ar' ? 'اسم المستخدم أو كلمة المرور غير صحيحة' : 'Invalid username or password')
+      setError(lang === 'ar' ? 'البريد/اسم المستخدم أو كلمة المرور غير صحيحة' : 'Invalid credentials')
     } else {
-      router.push('/scan')
+      router.push('/admin')
       router.refresh()
     }
     setLoading(false)
@@ -35,11 +36,11 @@ export default function StaffLoginForm({ lang }: { lang: Lang }) {
   return (
     <div className="flex flex-col gap-4">
       <Input
-        label={t('username', lang)}
+        label={lang === 'ar' ? 'البريد الإلكتروني أو اسم المستخدم' : 'Email or Username'}
         type="text"
-        placeholder={lang === 'ar' ? 'أدخل اسم المستخدم' : 'Enter username'}
-        value={username}
-        onChange={e => setUsername(e.target.value)}
+        placeholder={lang === 'ar' ? 'أدخل البريد أو اسم المستخدم' : 'Enter email or username'}
+        value={identifier}
+        onChange={e => setIdentifier(e.target.value)}
         ltr
       />
       <Input
