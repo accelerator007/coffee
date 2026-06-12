@@ -10,7 +10,7 @@ export async function createCustomer(data: {
   const phone = data.phone.startsWith('+') ? data.phone : `+968${data.phone.replace(/^0/, '')}`
   const email = `${phone}@phone.local`
 
-  const { error } = await adminClient.auth.admin.createUser({
+  const { data: created, error } = await adminClient.auth.admin.createUser({
     email,
     password: data.password,
     email_confirm: true,
@@ -22,7 +22,7 @@ export async function createCustomer(data: {
   })
 
   if (error) return { error: error.message }
-  return { success: true }
+  return { success: true, userId: created.user?.id }
 }
 
 export async function createEmployee(data: {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Lang, t } from '@/lib/i18n'
 import { createCustomer, createEmployee } from './actions'
 import Button from '@/components/ui/Button'
@@ -10,6 +11,7 @@ import Card from '@/components/ui/Card'
 type Tab = 'customer' | 'employee'
 
 export default function CreateUserClient({ lang }: { lang: Lang }) {
+  const router = useRouter()
   const [tab, setTab] = useState<Tab>('customer')
 
   // Customer fields
@@ -50,11 +52,18 @@ export default function CreateUserClient({ lang }: { lang: Lang }) {
 
     if ('error' in result && result.error) {
       setError(result.error)
-    } else {
-      setSuccess(lang === 'ar' ? '✅ تم إنشاء الحساب بنجاح' : '✅ Account created successfully')
-      setCName(''); setCPhone(''); setCPass('')
-      setEName(''); setEUsername(''); setEPass('')
+      setLoading(false)
+      return
     }
+
+    // After creating a customer, go straight to assigning a subscription + NFC card.
+    if (tab === 'customer' && 'userId' in result && result.userId) {
+      router.push(`/admin/add-subscription?customer=${result.userId}`)
+      return
+    }
+
+    setSuccess(lang === 'ar' ? '✅ تم إنشاء الحساب بنجاح' : '✅ Account created successfully')
+    setEName(''); setEUsername(''); setEPass('')
     setLoading(false)
   }
 

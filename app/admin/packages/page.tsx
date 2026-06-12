@@ -6,19 +6,13 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Lang } from '@/lib/i18n'
 import AdminPageClient from '../AdminPageClient'
-import AddSubscriptionClient from './AddSubscriptionClient'
-import { getCustomers, getPackages } from './actions'
+import PackagesClient from './PackagesClient'
+import { listPackages } from './actions'
 
-export default async function AddSubscriptionPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ customer?: string }>
-}) {
+export default async function PackagesPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
-
-  const { customer: preselectedCustomer } = await searchParams
 
   const cookieStore = await cookies()
   const lang: Lang = (cookieStore.get('lang')?.value as Lang) ?? 'ar'
@@ -29,7 +23,7 @@ export default async function AddSubscriptionPage({
     .eq('id', user.id)
     .single()
 
-  const [customers, packages] = await Promise.all([getCustomers(), getPackages()])
+  const packages = await listPackages()
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -40,15 +34,10 @@ export default async function AddSubscriptionPage({
             ← {lang === 'ar' ? 'لوحة التحكم' : 'Dashboard'}
           </Link>
           <h1 className="text-xl font-bold text-brand">
-            {lang === 'ar' ? 'إضافة اشتراك' : 'Add Subscription'}
+            {lang === 'ar' ? 'الباقات' : 'Packages'}
           </h1>
         </div>
-        <AddSubscriptionClient
-          lang={lang}
-          customers={customers}
-          packages={packages}
-          preselectedCustomer={preselectedCustomer}
-        />
+        <PackagesClient lang={lang} packages={packages} />
       </main>
     </div>
   )
