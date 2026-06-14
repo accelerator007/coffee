@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { Lang, t } from '@/lib/i18n'
-import { getCustomerByQR, getCustomerByNFC, recordRedemption } from '@/app/scan/actions'
+import { getCustomerByQR, nfcRedeem, recordRedemption } from '@/app/scan/actions'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
@@ -13,12 +13,14 @@ const QRScanner = dynamic(() => import('./QRScanner'), { ssr: false })
 
 type CustomerData = Awaited<ReturnType<typeof getCustomerByQR>>
 type Tab = 'qr' | 'nfc'
-type State = 'scanning' | 'loading' | 'result' | 'success' | 'error'
+type State = 'scanning' | 'loading' | 'result' | 'success' | 'nfc_success' | 'error'
+type NFCResult = { customerName: string; packageName: string; remaining: number; daysLeft: number }
 
 export default function ScanClient({ lang }: { lang: Lang }) {
   const [tab, setTab] = useState<Tab>('qr')
   const [state, setState] = useState<State>('scanning')
   const [data, setData] = useState<CustomerData | null>(null)
+  const [nfcResult, setNfcResult] = useState<NFCResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [recording, setRecording] = useState(false)
   const ar = lang === 'ar'
@@ -43,14 +45,18 @@ export default function ScanClient({ lang }: { lang: Lang }) {
   const handleNFCScan = useCallback(async (value: string) => {
     setState('loading')
     try {
-      const result = await getCustomerByNFC(value.trim())
-      if ('error' in result && result.error === 'invalid_nfc') {
-        setErrorMsg(ar ? 'بطاقة NFC غير مرتبطة بأي عميل' : 'NFC card not linked to any customer')
+      const result = await nfcRedeem(value.trim())
+      if ('error' in result) {
+        if (result.error === 'invalid_nfc') setErrorMsg(ar ? 'بطاقة NFC غير مرتبطة بأي عميل' : 'NFC card not linked to any customer')
+        else if (result.error === 'expired') setErrorMsg(ar ? 'الاشتراك منتهي' : 'Subscription expired')
+        else if (result.error === 'limit_reached') setErrorMsg(ar ? 'وصلت للحد اليومي' : 'Daily limit reached')
+        else setErrorMsg(ar ? 'حدث خطأ، حاول مجدداً' : 'Something went wrong, try again')
         setState('error')
         return
       }
-      setData(result as CustomerData)
-      setState('result')
+      setNfcResult(result)
+      setState('nfc_success')
+      setTimeout(() => { setState('scanning'); setNfcResult(null) }, 3000)
     } catch {
       setErrorMsg(ar ? 'حدث خطأ، حاول مجدداً' : 'Something went wrong, try again')
       setState('error')
@@ -81,6 +87,7 @@ export default function ScanClient({ lang }: { lang: Lang }) {
   function reset() {
     setState('scanning')
     setData(null)
+    setNfcResult(null)
     setErrorMsg('')
   }
 
@@ -135,6 +142,27 @@ export default function ScanClient({ lang }: { lang: Lang }) {
         <div className="text-5xl">⚠️</div>
         <p className="text-red-600 font-medium">{errorMsg}</p>
         <Button onClick={reset} variant="secondary">{t('scanAgain', lang)}</Button>
+      </div>
+    )
+  }
+
+  if (state === 'nfc_success' && nfcResult) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-8 text-center">
+        <div className="text-6xl">✅</div>
+        <p className="text-green-700 font-semibold text-xl">{nfcResult.customerName}</p>
+        <p className="text-text-muted text-sm">{nfcResult.packageName}</p>
+        <div className="flex gap-6 mt-2">
+          <div className="flex flex-col items-center">
+            <span className="text-3xl font-bold text-brand">{nfcResult.remaining}</span>
+            <span className="text-xs text-text-muted">{ar ? 'كوب متبقي اليوم' : 'cups left today'}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-3xl font-bold text-brand">{nfcResult.daysLeft}</span>
+            <span className="text-xs text-text-muted">{ar ? 'يوم متبقي' : 'days left'}</span>
+          </div>
+        </div>
+        <p className="text-xs text-text-muted mt-2">{ar ? 'سيتم المسح مجدداً خلال ثوانٍ...' : 'Ready to scan again shortly...'}</p>
       </div>
     )
   }

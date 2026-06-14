@@ -92,6 +92,54 @@ export async function getCustomerByNFC(nfcCardId: string) {
   }
 }
 
+export async function nfcRedeem(nfcCardId: string) {
+  if (!nfcCardId.trim()) return { error: 'invalid_nfc' as const }
+
+  const supabase = await createClient()
+
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('*, packages(*), profiles!customer_id(id, full_name, phone)')
+    .eq('nfc_card_id', nfcCardId.trim())
+    .order('start_date', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!subscription) return { error: 'invalid_nfc' as const }
+
+  const today = getMuscatDate()
+  const daysLeft = subscription.duration_days - Math.floor(
+    (new Date(today).getTime() - new Date(subscription.start_date).getTime()) / 86400000
+  )
+  if (daysLeft <= 0) return { error: 'expired' as const }
+
+  const pkg = subscription.packages as { name: string; daily_allowance: number }
+  const { count } = await supabase
+    .from('redemptions')
+    .select('*', { count: 'exact', head: true })
+    .eq('subscription_id', subscription.id)
+    .eq('day', today)
+
+  if ((count ?? 0) >= pkg.daily_allowance) {
+    return { error: 'limit_reached' as const }
+  }
+
+  const profile = subscription.profiles as { id: string; full_name: string; phone: string }
+  const { error } = await supabase
+    .from('redemptions')
+    .insert({ subscription_id: subscription.id, customer_id: profile.id, day: today })
+
+  if (error) return { error: 'db_error' as const }
+
+  return {
+    success: true,
+    customerName: profile.full_name,
+    packageName: pkg.name,
+    remaining: pkg.daily_allowance - (count ?? 0) - 1,
+    daysLeft,
+  }
+}
+
 export async function recordRedemption(subscriptionId: string, customerId: string) {
   const supabase = await createClient()
 
