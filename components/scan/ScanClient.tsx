@@ -3,22 +3,25 @@
 import { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { Lang, t } from '@/lib/i18n'
-import { getCustomerByQR, recordRedemption } from '@/app/scan/actions'
+import { getCustomerByQR, getCustomerByNFC, recordRedemption } from '@/app/scan/actions'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
+import NFCScanner from './NFCScanner'
 
 const QRScanner = dynamic(() => import('./QRScanner'), { ssr: false })
 
 type CustomerData = Awaited<ReturnType<typeof getCustomerByQR>>
-
+type Tab = 'qr' | 'nfc'
 type State = 'scanning' | 'loading' | 'result' | 'success' | 'error'
 
 export default function ScanClient({ lang }: { lang: Lang }) {
+  const [tab, setTab] = useState<Tab>('qr')
   const [state, setState] = useState<State>('scanning')
   const [data, setData] = useState<CustomerData | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [recording, setRecording] = useState(false)
+  const ar = lang === 'ar'
 
   const handleScan = useCallback(async (value: string) => {
     setState('loading')
@@ -32,10 +35,27 @@ export default function ScanClient({ lang }: { lang: Lang }) {
       setData(result)
       setState('result')
     } catch {
-      setErrorMsg(lang === 'ar' ? 'حدث خطأ، حاول مجدداً' : 'Something went wrong, try again')
+      setErrorMsg(ar ? 'حدث خطأ، حاول مجدداً' : 'Something went wrong, try again')
       setState('error')
     }
-  }, [lang])
+  }, [lang, ar])
+
+  const handleNFCScan = useCallback(async (value: string) => {
+    setState('loading')
+    try {
+      const result = await getCustomerByNFC(value.trim())
+      if ('error' in result && result.error === 'invalid_nfc') {
+        setErrorMsg(ar ? 'بطاقة NFC غير مرتبطة بأي عميل' : 'NFC card not linked to any customer')
+        setState('error')
+        return
+      }
+      setData(result as CustomerData)
+      setState('result')
+    } catch {
+      setErrorMsg(ar ? 'حدث خطأ، حاول مجدداً' : 'Something went wrong, try again')
+      setState('error')
+    }
+  }, [ar])
 
   async function handleRecord() {
     if (!data?.subscription || !data?.customer) return
@@ -67,8 +87,36 @@ export default function ScanClient({ lang }: { lang: Lang }) {
   if (state === 'scanning') {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-center text-text-muted text-sm">{t('scanInstruction', lang)}</p>
-        <QRScanner onScan={handleScan} onError={() => { setErrorMsg(lang === 'ar' ? 'لا يمكن الوصول للكاميرا' : 'Camera access denied'); setState('error') }} />
+        {/* Tabs */}
+        <div className="flex rounded-xl overflow-hidden border border-border">
+          <button
+            onClick={() => setTab('qr')}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+              tab === 'qr' ? 'bg-brand text-white' : 'bg-surface text-text-muted hover:text-foreground'
+            }`}
+          >
+            {ar ? '📷 رمز QR' : '📷 QR Code'}
+          </button>
+          <button
+            onClick={() => setTab('nfc')}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+              tab === 'nfc' ? 'bg-brand text-white' : 'bg-surface text-text-muted hover:text-foreground'
+            }`}
+          >
+            {ar ? '📡 بطاقة NFC' : '📡 NFC Card'}
+          </button>
+        </div>
+
+        {tab === 'qr' && (
+          <>
+            <p className="text-center text-text-muted text-sm">{t('scanInstruction', lang)}</p>
+            <QRScanner onScan={handleScan} onError={() => { setErrorMsg(ar ? 'لا يمكن الوصول للكاميرا' : 'Camera access denied'); setState('error') }} />
+          </>
+        )}
+
+        {tab === 'nfc' && (
+          <NFCScanner onScan={handleNFCScan} lang={lang} />
+        )}
       </div>
     )
   }

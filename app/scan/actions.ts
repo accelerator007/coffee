@@ -57,6 +57,41 @@ export async function getCustomerByQR(customerId: string) {
   }
 }
 
+export async function getCustomerByNFC(nfcCardId: string) {
+  if (!nfcCardId.trim()) return { error: 'invalid_nfc' as const }
+
+  const supabase = await createClient()
+
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('*, packages(*), profiles!customer_id(id, full_name, phone)')
+    .eq('nfc_card_id', nfcCardId.trim())
+    .order('start_date', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!subscription) return { error: 'invalid_nfc' as const }
+
+  const profile = subscription.profiles as { id: string; full_name: string; phone: string }
+  const today = getMuscatDate()
+  const daysLeft = subscription.duration_days - Math.floor(
+    (new Date(today).getTime() - new Date(subscription.start_date).getTime()) / 86400000
+  )
+
+  const { count } = await supabase
+    .from('redemptions')
+    .select('*', { count: 'exact', head: true })
+    .eq('subscription_id', subscription.id)
+    .eq('day', today)
+
+  return {
+    customer: profile,
+    subscription,
+    daysLeft,
+    todayUsed: count ?? 0,
+  }
+}
+
 export async function recordRedemption(subscriptionId: string, customerId: string) {
   const supabase = await createClient()
 
