@@ -167,25 +167,22 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
                   )}
                 </div>
               ) : (
-                <button
+                <ListRow
                   key={row.id}
-                  onClick={() => startEdit(row)}
-                  className="w-full text-start hover:bg-muted/40 rounded-2xl transition-colors px-1"
-                >
-                  <ListRow
-                    thumb={(row.full_name?.trim()?.[0] ?? '?').toUpperCase()}
-                    title={row.full_name || '—'}
-                    subtitle={
-                      <span className="flex items-center gap-2">
-                        <span dir="ltr" className="font-mono text-xs">{row.phone ?? '—'}</span>
-                        {row.package_name
-                          ? <span>· {row.package_name}</span>
-                          : <span className="opacity-70">· {ar ? 'بدون اشتراك' : 'No subscription'}</span>
-                        }
-                      </span>
-                    }
-                    trailing={
-                      <div className="flex flex-col items-end gap-1">
+                  thumb={(row.full_name?.trim()?.[0] ?? '?').toUpperCase()}
+                  title={row.full_name || '—'}
+                  subtitle={
+                    <span className="flex items-center gap-2">
+                      <span dir="ltr" className="font-mono text-xs">{row.phone ?? '—'}</span>
+                      {row.package_name
+                        ? <span>· {row.package_name}</span>
+                        : <span className="opacity-70">· {ar ? 'بدون اشتراك' : 'No subscription'}</span>
+                      }
+                    </span>
+                  }
+                  trailing={
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-end gap-1 me-1">
                         {row.status
                           ? <Badge status={row.status} label={t(row.status, lang)} />
                           : <span className="text-text-muted text-xs">—</span>
@@ -196,9 +193,23 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
                           </span>
                         )}
                       </div>
-                    }
-                  />
-                </button>
+                      <button
+                        onClick={() => startEdit(row)}
+                        title={ar ? 'تعديل' : 'Edit'}
+                        className="w-9 h-9 shrink-0 rounded-full bg-muted hover:bg-border text-brand flex items-center justify-center transition-colors"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => { startEdit(row); setConfirmDelete(true) }}
+                        title={ar ? 'حذف' : 'Delete'}
+                        className="w-9 h-9 shrink-0 rounded-full bg-[#fce8e8] hover:bg-[#f9d8d8] flex items-center justify-center transition-colors"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  }
+                />
               )
             ))}
           </div>
