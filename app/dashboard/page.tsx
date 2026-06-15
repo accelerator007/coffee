@@ -29,31 +29,27 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single()
 
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('*, packages(*)')
-    .eq('customer_id', user.id)
-    .order('start_date', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  // Use SQL RPC to calculate days_left with Asia/Muscat timezone (avoids JS date math bugs)
+  const { data: subRaw } = await supabase.rpc('get_my_subscription').maybeSingle()
+  const sub = subRaw as {
+    id: string; package_id: string; package_name: string;
+    duration_days: number; daily_allowance: number;
+    start_date: string; days_left: number; status: string;
+  } | null
 
   let todayUsed = 0
-  if (subscription) {
+  if (sub) {
     const today = getMuscatDate()
     const { count } = await supabase
       .from('redemptions')
       .select('*', { count: 'exact', head: true })
-      .eq('subscription_id', subscription.id)
+      .eq('subscription_id', sub.id)
       .eq('day', today)
     todayUsed = count ?? 0
   }
 
-  const today = getMuscatDate()
-  const daysLeft = subscription
-    ? subscription.duration_days - Math.floor(
-        (new Date(today).getTime() - new Date(subscription.start_date).getTime()) / 86400000
-      )
-    : 0
+  const subscription = sub
+  const daysLeft = sub?.days_left ?? 0
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -67,7 +63,7 @@ export default async function DashboardPage() {
           <>
             <Card>
               <SubscriptionCard
-                packageName={(subscription.packages as { name: string }).name}
+                packageName={subscription.package_name}
                 daysLeft={daysLeft}
                 totalDays={subscription.duration_days}
                 lang={lang}
@@ -77,7 +73,7 @@ export default async function DashboardPage() {
             <Card>
               <DailyAllowance
                 used={todayUsed}
-                total={(subscription.packages as { daily_allowance: number }).daily_allowance}
+                total={subscription.daily_allowance}
                 lang={lang}
               />
             </Card>
