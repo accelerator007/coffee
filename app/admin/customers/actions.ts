@@ -1,6 +1,45 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { adminClient } from '@/lib/supabase/admin'
+
+function normalizePhone(raw: string) {
+  return raw.startsWith('+') ? raw : `+968${raw.replace(/^0/, '')}`
+}
+
+export async function updateCustomer(
+  id: string,
+  data: { full_name: string; phone: string }
+) {
+  const phone = normalizePhone(data.phone.trim())
+  const full_name = data.full_name.trim()
+
+  if (!full_name) return { error: 'الاسم مطلوب' }
+
+  // Update the profile row
+  const { error: profileError } = await adminClient
+    .from('profiles')
+    .update({ full_name, phone })
+    .eq('id', id)
+
+  if (profileError) return { error: profileError.message }
+
+  // Keep the auth user (login email + metadata) in sync with the new phone
+  const { error: authError } = await adminClient.auth.admin.updateUserById(id, {
+    email: `${phone}@phone.local`,
+    user_metadata: { role: 'customer', full_name, phone },
+  })
+
+  if (authError) return { error: authError.message }
+  return { success: true }
+}
+
+export async function deleteCustomer(id: string) {
+  // Deleting the auth user cascades to the profile (and its subscriptions/redemptions)
+  const { error } = await adminClient.auth.admin.deleteUser(id)
+  if (error) return { error: error.message }
+  return { success: true }
+}
 
 export async function searchCustomers(q: string) {
   const supabase = await createClient()
