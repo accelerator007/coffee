@@ -12,33 +12,36 @@ export default function LoginClient() {
   const [lang, setLang] = useState<Lang>('ar')
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4"
+      style={{ background: 'linear-gradient(160deg, #f3e9da 0%, #faf4ec 55%, #fdfaf5 100%)' }}
+    >
       <div className="w-full max-w-sm animate-fade-up">
         {/* Lang toggle */}
         <div className="flex justify-end mb-6">
           <button
             onClick={() => setLang(l => l === 'ar' ? 'en' : 'ar')}
-            className="text-sm text-text-muted hover:text-brand transition-colors px-4 py-1.5 rounded-full border border-border"
+            className="text-sm text-text-muted hover:text-brand transition-colors px-4 py-1.5 rounded-full border border-border bg-surface/60 backdrop-blur"
           >
             {lang === 'ar' ? 'English' : 'العربية'}
           </button>
         </div>
 
-        {/* Hero */}
+        {/* Hero splash */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-muted shadow-[0_4px_24px_rgba(111,78,55,0.15)] mb-4 text-5xl">
+          <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br from-[#6f4e37] to-[#3d2b1f] shadow-[0_8px_32px_rgba(111,78,55,0.30)] mb-5 text-6xl">
             ☕
           </div>
           <h1 className="text-4xl font-black text-brand tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
-            Coffee
+            {lang === 'ar' ? 'قهوتي' : 'Coffee Shop'}
           </h1>
-          <p className="text-text-muted text-sm mt-2 leading-relaxed">
+          <p className="text-[#a87e54] text-sm mt-2 leading-relaxed tracking-wide">
             {lang === 'ar' ? 'اشتراكات القهوة اليومية' : 'Daily Coffee Subscriptions'}
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-surface rounded-3xl border border-border shadow-[0_4px_24px_rgba(111,78,55,0.10)] p-6">
+        <div className="bg-surface rounded-3xl border border-border shadow-[0_8px_32px_rgba(111,78,55,0.12)] p-6">
           {/* Tabs */}
           <div className="flex gap-1 bg-muted rounded-2xl p-1 mb-6">
             {(['customer', 'staff'] as Tab[]).map(tabKey => (

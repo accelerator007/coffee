@@ -62,7 +62,7 @@ export default async function DashboardPage() {
         lang={lang}
       />
 
-      <main className="flex-1 px-4 py-6 max-w-md mx-auto w-full flex flex-col gap-4">
+      <main className="flex-1 px-4 py-6 max-w-md mx-auto w-full flex flex-col gap-5 animate-fade-up">
         {subscription ? (
           <>
             <Card>
@@ -82,12 +82,17 @@ export default async function DashboardPage() {
               />
             </Card>
 
-            <Card>
-              <h3 className="font-medium text-foreground text-center mb-2">
+            <Card className="flex flex-col items-center text-center">
+              <p className="text-xs font-semibold tracking-widest text-latte uppercase mb-1">
+                {lang === 'ar' ? 'رمزي' : 'My Code'}
+              </p>
+              <h3 className="font-black text-lg text-foreground mb-3">
                 {lang === 'ar' ? 'رمز QR الخاص بي' : 'My QR Code'}
               </h3>
-              <QRCodeDisplay value={user.id} />
-              <p className="text-xs text-text-muted text-center mt-1">
+              <div className="rounded-2xl bg-[#fdfaf5] p-3 border border-border">
+                <QRCodeDisplay value={user.id} />
+              </div>
+              <p className="text-xs text-text-muted mt-3">
                 {lang === 'ar' ? 'اعرضه للموظف لتسجيل كوبك' : 'Show to staff to redeem your cup'}
               </p>
             </Card>

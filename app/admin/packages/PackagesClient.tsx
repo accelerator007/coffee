@@ -153,23 +153,26 @@ export default function PackagesClient({ lang, packages }: { lang: Lang; package
           {ar ? 'لا توجد باقات بعد' : 'No packages yet'}
         </Card>
       ) : (
-        <div className="flex flex-col gap-3">
-          {packages.map(p => (
-            <Card key={p.id}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-semibold">{p.name}</h4>
+        <Card className="py-1">
+          <div className="divide-y divide-border/60">
+            {packages.map(p => (
+              <div key={p.id} className="flex items-center gap-3 py-3">
+                <div className="shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6f4e37] to-[#3d2b1f] text-[#fdfaf5] flex items-center justify-center text-2xl shadow-sm">
+                  ☕
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-foreground truncate">{p.name}</h4>
                   <p className="text-sm text-text-muted">
-                    📅 {p.duration_days} {ar ? 'يوم' : 'days'} · ☕ {p.daily_allowance} {ar ? 'كوب/يوم' : 'cups/day'} · 💰 {p.price} {ar ? 'ر.ع' : 'OMR'}
+                    {p.duration_days} {ar ? 'يوم' : 'd'} · {p.daily_allowance} {ar ? 'كوب/يوم' : 'cups'} · {p.price} {ar ? 'ر.ع' : 'OMR'}
                   </p>
                 </div>
-                <Button variant="secondary" onClick={() => startEdit(p)} className="min-h-9 px-3 text-sm">
+                <Button variant="soft" onClick={() => startEdit(p)} className="min-h-9 px-4 text-sm">
                   {ar ? 'تعديل' : 'Edit'}
                 </Button>
               </div>
-            </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+        </Card>
       )}
     </div>
   )
