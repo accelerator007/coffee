@@ -1,36 +1,61 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FDF6EC;
-  --foreground: #1a1008;
-  --brand: #6B3F1F;
-  --brand-light: #C8956C;
-  --brand-dark: #4a2a12;
+  --background: #fdfaf5;
   --surface: #ffffff;
-  --muted: #f5ece0;
-  --border: #e8d5bc;
-  --text-muted: #8a6a4a;
+  --surface-warm: #faf4ec;
+  --muted: #f3e9da;
+  --border: #e8d8c3;
+
+  --brand: #6f4e37;
+  --brand-dark: #5a3e2b;
+  --brand-darker: #3d2b1f;
+  --latte: #b9966f;
+  --latte-dark: #a87e54;
+  --accent: #c98a3c;
+
+  --foreground: #3d2b1f;
+  --text-muted: #a87e54;
+  --brand-light: #b9966f;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-brand: var(--brand);
-  --color-brand-light: var(--brand-light);
+  --color-brand-light: var(--latte);
   --color-brand-dark: var(--brand-dark);
+  --color-accent: var(--accent);
+  --color-latte: var(--latte);
   --color-surface: var(--surface);
+  --color-surface-warm: var(--surface-warm);
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-text-muted: var(--text-muted);
-  --font-sans: var(--font-noto-arabic), system-ui, sans-serif;
+  --font-sans: var(--font-almarai), system-ui, sans-serif;
+  --font-heading: var(--font-cairo), var(--font-almarai), system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
 }
 
 * {
   box-sizing: border-box;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.35s ease both;
 }

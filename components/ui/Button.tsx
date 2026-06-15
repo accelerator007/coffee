@@ -2,7 +2,7 @@
 
 import { ButtonHTMLAttributes } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'danger' | 'ghost'
+type Variant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'soft'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant
@@ -10,10 +10,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-brand text-white hover:bg-brand-dark active:bg-brand-dark',
-  secondary: 'bg-surface text-brand border border-brand hover:bg-muted',
-  danger: 'bg-red-600 text-white hover:bg-red-700',
-  ghost: 'text-brand hover:bg-muted',
+  primary:   'bg-brand text-[#fdfaf5] shadow-sm hover:bg-brand-dark active:scale-[0.97]',
+  secondary: 'border border-brand text-brand bg-transparent hover:bg-brand hover:text-[#fdfaf5] active:scale-[0.97]',
+  soft:      'bg-muted text-brand hover:bg-[#e8d8c3] active:scale-[0.97]',
+  danger:    'bg-red-600 text-white hover:bg-red-700 active:scale-[0.97]',
+  ghost:     'text-brand hover:bg-muted',
 }
 
 export default function Button({
@@ -29,8 +30,8 @@ export default function Button({
       disabled={disabled || loading}
       className={`
         inline-flex items-center justify-center gap-2
-        min-h-11 px-5 rounded-xl font-medium text-base
-        transition-colors duration-150
+        min-h-11 px-6 rounded-full font-semibold text-base
+        transition-all duration-150
         disabled:opacity-50 disabled:cursor-not-allowed
         ${variants[variant]}
         ${className}

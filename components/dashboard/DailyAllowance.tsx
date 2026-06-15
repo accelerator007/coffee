@@ -10,22 +10,30 @@ export default function DailyAllowance({ used, total, lang }: Props) {
   const remaining = Math.max(0, total - used)
 
   return (
-    <div className="flex flex-col gap-3">
-      <h3 className="font-medium text-foreground">{t('dailyAllowance', lang)}</h3>
-      <div className="flex gap-2 flex-wrap">
+    <div className="flex flex-col gap-4">
+      <div>
+        <p className="text-xs font-semibold tracking-widest text-latte uppercase mb-0.5">
+          {lang === 'ar' ? 'اليوم' : 'Today'}
+        </p>
+        <h3 className="font-black text-xl text-foreground">{t('dailyAllowance', lang)}</h3>
+      </div>
+      <div className="flex gap-3 flex-wrap">
         {Array.from({ length: total }).map((_, i) => (
           <div
             key={i}
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-xl
-              ${i < used ? 'bg-muted text-text-muted' : 'bg-brand text-white'}`}
+            className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-sm transition-all
+              ${i < used
+                ? 'bg-muted text-text-muted opacity-40'
+                : 'bg-gradient-to-br from-[#c98a3c] to-[#6f4e37] text-white shadow-[0_2px_8px_rgba(201,138,60,0.35)]'
+              }`}
           >
             ☕
           </div>
         ))}
       </div>
       <p className="text-sm text-text-muted">
-        <span className="font-semibold text-brand text-lg">{remaining}</span>
-        {' '}{t('cupsRemaining', lang)}
+        <span className="font-black text-accent text-2xl">{remaining}</span>
+        {'  '}{t('cupsRemaining', lang)}
       </p>
     </div>
   )

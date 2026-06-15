@@ -40,19 +40,19 @@ export default async function AdminPage() {
       <AdminPageClient userName={profile?.full_name} lang={lang} />
 
       <main className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-brand">{t('dashboard', lang)}</h1>
-          <div className="flex gap-4">
-            <Link href="/admin/create-user" className="text-sm text-brand underline">
+        <div className="flex flex-col gap-3">
+          <h1 className="text-2xl font-black text-brand">{t('dashboard', lang)}</h1>
+          <div className="flex gap-2 flex-wrap">
+            <Link href="/admin/create-user" className="text-sm text-brand bg-muted hover:bg-border px-4 py-1.5 rounded-full transition-colors font-medium">
               {lang === 'ar' ? '+ حساب' : '+ Account'}
             </Link>
-            <Link href="/admin/add-subscription" className="text-sm text-brand underline">
+            <Link href="/admin/add-subscription" className="text-sm text-brand bg-muted hover:bg-border px-4 py-1.5 rounded-full transition-colors font-medium">
               {lang === 'ar' ? '+ اشتراك' : '+ Subscribe'}
             </Link>
-            <Link href="/admin/packages" className="text-sm text-brand underline">
+            <Link href="/admin/packages" className="text-sm text-brand bg-muted hover:bg-border px-4 py-1.5 rounded-full transition-colors font-medium">
               {lang === 'ar' ? 'الباقات' : 'Packages'}
             </Link>
-            <Link href="/admin/customers" className="text-sm text-brand underline">
+            <Link href="/admin/customers" className="text-sm text-[#fdfaf5] bg-brand hover:bg-brand-dark px-4 py-1.5 rounded-full transition-colors font-medium">
               {t('customers', lang)} ←
             </Link>
           </div>
@@ -60,10 +60,10 @@ export default async function AdminPage() {
 
         {/* KPI Grid */}
         {kpis && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 animate-fade-up">
             <KPICard label={t('totalSubscribers', lang)} value={kpis.total_subscribers} icon="👥" />
-            <KPICard label={t('activeSubscribers', lang)} value={kpis.active_subscribers} icon="✅" color="text-green-700" />
-            <KPICard label={t('expiredSubscribers', lang)} value={kpis.expired_subscribers} icon="⏰" color="text-red-600" />
+            <KPICard label={t('activeSubscribers', lang)} value={kpis.active_subscribers} icon="✅" color="text-[#2d6a4f]" />
+            <KPICard label={t('expiredSubscribers', lang)} value={kpis.expired_subscribers} icon="⏰" color="text-[#9b2335]" />
             <KPICard label={t('totalRedemptions', lang)} value={kpis.total_redemptions} icon="☕" />
           </div>
         )}

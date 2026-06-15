@@ -1,8 +1,8 @@
 type Status = 'active' | 'expired'
 
 const styles: Record<Status, string> = {
-  active: 'bg-green-100 text-green-800',
-  expired: 'bg-red-100 text-red-700',
+  active:  'bg-[#e6f4ec] text-[#2d6a4f]',
+  expired: 'bg-[#fce8e8] text-[#9b2335]',
 }
 
 export default function Badge({ status, label }: { status: Status; label: string }) {
