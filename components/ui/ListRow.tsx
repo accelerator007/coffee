@@ -14,7 +14,7 @@ export default function ListRow({ thumb, title, subtitle, trailing, className = 
   return (
     <div className={`flex items-center gap-3 py-3 ${className}`}>
       {thumb !== undefined && (
-        <div className="shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6f4e37] to-[#3d2b1f] text-[#fdfaf5] flex items-center justify-center text-lg font-bold shadow-sm">
+        <div className="shrink-0 w-12 h-12 rounded-2xl bg-brand-gradient text-background flex items-center justify-center text-lg font-bold shadow-sm">
           {thumb}
         </div>
       )}

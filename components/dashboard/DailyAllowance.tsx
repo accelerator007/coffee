@@ -1,3 +1,4 @@
+import { Coffee } from 'lucide-react'
 import { Lang, t } from '@/lib/i18n'
 
 interface Props {
@@ -21,13 +22,13 @@ export default function DailyAllowance({ used, total, lang }: Props) {
         {Array.from({ length: total }).map((_, i) => (
           <div
             key={i}
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-sm transition-all
+            className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-all
               ${i < used
                 ? 'bg-muted text-text-muted opacity-40'
-                : 'bg-gradient-to-br from-[#c98a3c] to-[#6f4e37] text-white shadow-[0_2px_8px_rgba(201,138,60,0.35)]'
+                : 'bg-accent-gradient text-white shadow-[0_2px_8px_rgba(201,138,60,0.35)]'
               }`}
           >
-            ☕
+            <Coffee size={22} strokeWidth={1.75} aria-hidden />
           </div>
         ))}
       </div>

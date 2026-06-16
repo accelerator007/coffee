@@ -18,7 +18,7 @@ export default function QRCodeDisplay({ value }: { value: string }) {
 
   return (
     <div className="flex justify-center p-4">
-      <canvas ref={canvasRef} className="rounded-xl" />
+      <canvas ref={canvasRef} className="rounded-2xl" />
     </div>
   )
 }

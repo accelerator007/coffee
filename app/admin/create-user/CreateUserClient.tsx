@@ -62,7 +62,7 @@ export default function CreateUserClient({ lang }: { lang: Lang }) {
       return
     }
 
-    setSuccess(lang === 'ar' ? '✅ تم إنشاء الحساب بنجاح' : '✅ Account created successfully')
+    setSuccess(lang === 'ar' ? 'تم إنشاء الحساب بنجاح' : 'Account created successfully')
     setEName(''); setEUsername(''); setEPass('')
     setLoading(false)
   }
@@ -70,13 +70,13 @@ export default function CreateUserClient({ lang }: { lang: Lang }) {
   return (
     <Card>
       {/* Tabs */}
-      <div className="flex gap-1 bg-muted rounded-xl p-1 mb-6">
+      <div className="flex gap-1 bg-muted rounded-2xl p-1 mb-6">
         {(['customer', 'employee'] as Tab[]).map(tabKey => (
           <button
             key={tabKey}
             onClick={() => { setTab(tabKey); setError(''); setSuccess('') }}
             className={`
-              flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors
+              flex-1 py-2 px-3 rounded-full text-sm font-medium transition-colors
               ${tab === tabKey ? 'bg-surface text-brand shadow-sm' : 'text-text-muted hover:text-foreground'}
             `}
           >
@@ -95,7 +95,7 @@ export default function CreateUserClient({ lang }: { lang: Lang }) {
               onChange={e => setCName(e.target.value)}
             />
             <div className="flex gap-2 items-end">
-              <span className="min-h-11 flex items-center px-3 bg-muted border border-border rounded-xl text-text-muted text-sm font-mono" dir="ltr">
+              <span className="min-h-11 flex items-center px-3 bg-muted border border-border rounded-2xl text-text-muted text-sm font-mono" dir="ltr">
                 +968
               </span>
               <Input
@@ -143,8 +143,8 @@ export default function CreateUserClient({ lang }: { lang: Lang }) {
           </>
         )}
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
-        {success && <p className="text-sm text-green-600 font-medium">{success}</p>}
+        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+        {success && <p className="text-sm text-success font-medium">{success}</p>}
 
         <Button onClick={handleCreate} loading={loading} className="w-full">
           {lang === 'ar' ? 'إنشاء الحساب' : 'Create Account'}

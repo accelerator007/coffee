@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Coffee } from 'lucide-react'
 import { Lang } from '@/lib/i18n'
 import { createPackage, updatePackage } from './actions'
 import Button from '@/components/ui/Button'
@@ -25,8 +26,8 @@ export default function PackagesClient({ lang, packages }: { lang: Lang; package
   const [error, setError] = useState('')
 
   const ar = lang === 'ar'
-  const inputClass = `w-full min-h-11 px-4 rounded-xl border border-border bg-surface text-foreground
-    focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand`
+  const inputClass = `w-full min-h-11 px-4 rounded-2xl border border-border bg-surface text-foreground
+    focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand`
 
   function startEdit(p: Package) {
     setEditingId(p.id)
@@ -133,7 +134,7 @@ export default function PackagesClient({ lang, packages }: { lang: Lang; package
               />
             </div>
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
             <div className="flex gap-3">
               <Button onClick={save} loading={loading} className="flex-1">
@@ -157,8 +158,8 @@ export default function PackagesClient({ lang, packages }: { lang: Lang; package
           <div className="divide-y divide-border/60">
             {packages.map(p => (
               <div key={p.id} className="flex items-center gap-3 py-3">
-                <div className="shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6f4e37] to-[#3d2b1f] text-[#fdfaf5] flex items-center justify-center text-2xl shadow-sm">
-                  ☕
+                <div className="shrink-0 w-12 h-12 rounded-2xl bg-brand-gradient text-background flex items-center justify-center shadow-sm">
+                  <Coffee size={22} strokeWidth={1.75} aria-hidden />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-foreground truncate">{p.name}</h4>

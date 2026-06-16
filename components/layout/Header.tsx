@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { Coffee } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Lang, t } from '@/lib/i18n'
 
@@ -21,9 +22,9 @@ export default function Header({ userName, lang, onLangToggle }: HeaderProps) {
   }
 
   return (
-    <header className="bg-[#fdfaf5]/90 backdrop-blur-md border-b border-border px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow-[0_1px_8px_rgba(111,78,55,0.07)]">
+    <header className="bg-background/90 backdrop-blur-md border-b border-border px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow-[0_1px_8px_rgba(111,78,55,0.07)]">
       <div className="flex items-center gap-2">
-        <span className="text-2xl">☕</span>
+        <Coffee size={24} strokeWidth={1.75} className="text-brand" aria-hidden />
         <span className="font-black text-lg text-brand" style={{ fontFamily: 'var(--font-heading)' }}>Coffee</span>
       </div>
 

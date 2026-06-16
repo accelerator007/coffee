@@ -37,7 +37,7 @@ export default function PhoneLoginForm({ lang }: { lang: Lang }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-2 items-end">
-        <span className="min-h-11 flex items-center px-3 bg-muted border border-border rounded-xl text-text-muted text-sm font-mono" dir="ltr">
+        <span className="min-h-11 flex items-center px-3 bg-muted border border-border rounded-2xl text-text-muted text-sm font-mono" dir="ltr">
           +968
         </span>
         <Input

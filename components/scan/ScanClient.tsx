@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
+import { Camera, Nfc, TriangleAlert, CircleCheck } from 'lucide-react'
 import { Lang, t } from '@/lib/i18n'
 import { getCustomerByQR, nfcRedeem, recordRedemption } from '@/app/scan/actions'
 import Card from '@/components/ui/Card'
@@ -95,22 +96,24 @@ export default function ScanClient({ lang }: { lang: Lang }) {
     return (
       <div className="flex flex-col gap-4">
         {/* Tabs */}
-        <div className="flex rounded-xl overflow-hidden border border-border">
+        <div className="flex rounded-2xl overflow-hidden border border-border">
           <button
             onClick={() => setTab('qr')}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors inline-flex items-center justify-center gap-2 ${
               tab === 'qr' ? 'bg-brand text-white' : 'bg-surface text-text-muted hover:text-foreground'
             }`}
           >
-            {ar ? '📷 رمز QR' : '📷 QR Code'}
+            <Camera size={18} strokeWidth={1.75} aria-hidden />
+            {ar ? 'رمز QR' : 'QR Code'}
           </button>
           <button
             onClick={() => setTab('nfc')}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors inline-flex items-center justify-center gap-2 ${
               tab === 'nfc' ? 'bg-brand text-white' : 'bg-surface text-text-muted hover:text-foreground'
             }`}
           >
-            {ar ? '📡 بطاقة NFC' : '📡 NFC Card'}
+            <Nfc size={18} strokeWidth={1.75} aria-hidden />
+            {ar ? 'بطاقة NFC' : 'NFC Card'}
           </button>
         </div>
 
@@ -139,8 +142,8 @@ export default function ScanClient({ lang }: { lang: Lang }) {
   if (state === 'error') {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
-        <div className="text-5xl">⚠️</div>
-        <p className="text-red-600 font-medium">{errorMsg}</p>
+        <TriangleAlert size={56} strokeWidth={1.5} className="text-danger" aria-hidden />
+        <p role="alert" className="text-danger font-medium">{errorMsg}</p>
         <Button onClick={reset} variant="secondary">{t('scanAgain', lang)}</Button>
       </div>
     )
@@ -149,8 +152,8 @@ export default function ScanClient({ lang }: { lang: Lang }) {
   if (state === 'nfc_success' && nfcResult) {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
-        <div className="text-6xl">✅</div>
-        <p className="text-green-700 font-semibold text-xl">{nfcResult.customerName}</p>
+        <CircleCheck size={64} strokeWidth={1.5} className="text-success" aria-hidden />
+        <p className="text-success font-semibold text-xl">{nfcResult.customerName}</p>
         <p className="text-text-muted text-sm">{nfcResult.packageName}</p>
         <div className="flex gap-6 mt-2">
           <div className="flex flex-col items-center">
@@ -170,8 +173,8 @@ export default function ScanClient({ lang }: { lang: Lang }) {
   if (state === 'success') {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
-        <div className="text-6xl">✅</div>
-        <p className="text-green-700 font-semibold text-lg">{t('redemptionSuccess', lang)}</p>
+        <CircleCheck size={64} strokeWidth={1.5} className="text-success" aria-hidden />
+        <p className="text-success font-semibold text-lg">{t('redemptionSuccess', lang)}</p>
         <Button onClick={reset}>{t('scanAgain', lang)}</Button>
       </div>
     )
@@ -215,7 +218,7 @@ export default function ScanClient({ lang }: { lang: Lang }) {
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">{lang === 'ar' ? 'كوبات متبقية اليوم' : 'Cups left today'}</span>
-                <span className={`font-semibold ${remaining === 0 ? 'text-red-500' : 'text-green-700'}`}>
+                <span className={`font-semibold ${remaining === 0 ? 'text-danger' : 'text-success'}`}>
                   {remaining} / {pkg?.daily_allowance}
                 </span>
               </div>
@@ -239,7 +242,7 @@ export default function ScanClient({ lang }: { lang: Lang }) {
       </div>
 
       {!canRedeem && isActive && remaining === 0 && (
-        <p className="text-center text-sm text-red-500">{t('limitReached', lang)}</p>
+        <p className="text-center text-sm text-danger">{t('limitReached', lang)}</p>
       )}
     </div>
   )

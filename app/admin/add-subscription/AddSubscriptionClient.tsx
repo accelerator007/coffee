@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { Calendar, Coffee, Wallet } from 'lucide-react'
 import { Lang } from '@/lib/i18n'
 import { addSubscription } from './actions'
 import Button from '@/components/ui/Button'
@@ -43,7 +44,7 @@ export default function AddSubscriptionClient({ lang, customers, packages, prese
     if ('error' in result && result.error) {
       setError(result.error)
     } else {
-      setSuccess(lang === 'ar' ? '✅ تم إضافة الاشتراك بنجاح' : '✅ Subscription added successfully')
+      setSuccess(lang === 'ar' ? 'تم إضافة الاشتراك بنجاح' : 'Subscription added successfully')
       setCustomerId('')
       setPackageId('')
       setStartDate(today)
@@ -52,8 +53,8 @@ export default function AddSubscriptionClient({ lang, customers, packages, prese
     setLoading(false)
   }
 
-  const selectClass = `w-full min-h-11 px-4 rounded-xl border border-border bg-surface text-foreground
-    focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors`
+  const selectClass = `w-full min-h-11 px-4 rounded-2xl border border-border bg-surface text-foreground
+    focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors`
 
   return (
     <Card>
@@ -94,10 +95,10 @@ export default function AddSubscriptionClient({ lang, customers, packages, prese
 
         {/* Package preview */}
         {selectedPkg && (
-          <div className="bg-muted rounded-xl p-3 text-sm flex gap-4">
-            <span>📅 {selectedPkg.duration_days} {lang === 'ar' ? 'يوم' : 'days'}</span>
-            <span>☕ {selectedPkg.daily_allowance} {lang === 'ar' ? 'كوب/يوم' : 'cups/day'}</span>
-            <span>💰 {selectedPkg.price} OMR</span>
+          <div className="bg-muted rounded-2xl p-3 text-sm flex gap-4 flex-wrap">
+            <span className="inline-flex items-center gap-1.5"><Calendar size={16} strokeWidth={1.75} aria-hidden /> {selectedPkg.duration_days} {lang === 'ar' ? 'يوم' : 'days'}</span>
+            <span className="inline-flex items-center gap-1.5"><Coffee size={16} strokeWidth={1.75} aria-hidden /> {selectedPkg.daily_allowance} {lang === 'ar' ? 'كوب/يوم' : 'cups/day'}</span>
+            <span className="inline-flex items-center gap-1.5"><Wallet size={16} strokeWidth={1.75} aria-hidden /> {selectedPkg.price} OMR</span>
           </div>
         )}
 
@@ -129,8 +130,8 @@ export default function AddSubscriptionClient({ lang, customers, packages, prese
           />
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
-        {success && <p className="text-sm text-green-600 font-medium">{success}</p>}
+        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+        {success && <p className="text-sm text-success font-medium">{success}</p>}
 
         <Button onClick={handleSubmit} loading={loading} className="w-full">
           {lang === 'ar' ? 'إضافة الاشتراك' : 'Add Subscription'}

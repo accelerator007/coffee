@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Nfc } from 'lucide-react'
 import { Lang } from '@/lib/i18n'
 import Button from '@/components/ui/Button'
 
@@ -44,7 +45,7 @@ export default function NFCScanner({ onScan, lang }: Props) {
     <div className="flex flex-col gap-4">
       {nfcSupported === true && nfcReading && (
         <div className="flex flex-col items-center gap-3 py-6 rounded-2xl bg-surface border border-border">
-          <div className="text-5xl animate-pulse">📡</div>
+          <Nfc size={48} strokeWidth={1.5} className="text-brand animate-pulse" aria-hidden />
           <p className="text-text-muted text-sm text-center">
             {ar ? 'قرّب بطاقة NFC من الهاتف...' : 'Hold NFC card near phone...'}
           </p>
@@ -67,9 +68,10 @@ export default function NFCScanner({ onScan, lang }: Props) {
             onChange={e => setManualId(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && manualId.trim() && onScan(manualId.trim())}
             placeholder={ar ? 'رقم بطاقة NFC' : 'NFC card number'}
+            aria-label={ar ? 'رقم بطاقة NFC' : 'NFC card number'}
             dir="ltr"
-            className="flex-1 min-h-11 px-4 rounded-xl border border-border bg-surface text-foreground
-              focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
+            className="flex-1 min-h-11 px-4 rounded-2xl border border-border bg-surface text-foreground
+              focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
           />
           <Button
             onClick={() => manualId.trim() && onScan(manualId.trim())}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Coffee } from 'lucide-react'
 import { Lang, t } from '@/lib/i18n'
 import PhoneLoginForm from '@/components/auth/PhoneLoginForm'
 import StaffLoginForm from '@/components/auth/StaffLoginForm'
@@ -29,13 +30,13 @@ export default function LoginClient() {
 
         {/* Hero splash */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br from-[#6f4e37] to-[#3d2b1f] shadow-[0_8px_32px_rgba(111,78,55,0.30)] mb-5 text-6xl">
-            ☕
+          <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-brand-gradient shadow-[0_8px_32px_rgba(111,78,55,0.30)] mb-5 text-background">
+            <Coffee size={56} strokeWidth={1.5} aria-hidden />
           </div>
           <h1 className="text-4xl font-black text-brand tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
             {lang === 'ar' ? 'قهوتي' : 'Coffee Shop'}
           </h1>
-          <p className="text-[#a87e54] text-sm mt-2 leading-relaxed tracking-wide">
+          <p className="text-text-muted text-sm mt-2 leading-relaxed tracking-wide">
             {lang === 'ar' ? 'اشتراكات القهوة اليومية' : 'Daily Coffee Subscriptions'}
           </p>
         </div>
@@ -49,7 +50,7 @@ export default function LoginClient() {
                 key={tabKey}
                 onClick={() => setTab(tabKey)}
                 className={`
-                  flex-1 py-2 px-3 rounded-xl text-sm font-semibold transition-all
+                  flex-1 py-2 px-3 rounded-full text-sm font-semibold transition-all
                   ${tab === tabKey
                     ? 'bg-surface text-brand shadow-sm'
                     : 'text-text-muted hover:text-foreground'

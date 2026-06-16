@@ -34,8 +34,8 @@ export default function SubscriptionCard({ packageName, daysLeft, totalDays, lan
         </div>
         <div className="h-2.5 bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full rounded-full transition-all"
-            style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #c98a3c, #6f4e37)' }}
+            className="h-full rounded-full transition-all bg-accent-gradient"
+            style={{ width: `${progress}%` }}
           />
         </div>
       </div>

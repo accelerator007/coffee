@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
+import { Coffee } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Lang } from '@/lib/i18n'
 import Card from '@/components/ui/Card'
@@ -85,7 +86,7 @@ export default async function DashboardPage() {
               <h3 className="font-black text-lg text-foreground mb-3">
                 {lang === 'ar' ? 'رمز QR الخاص بي' : 'My QR Code'}
               </h3>
-              <div className="rounded-2xl bg-[#fdfaf5] p-3 border border-border">
+              <div className="rounded-2xl bg-background p-3 border border-border">
                 <QRCodeDisplay value={user.id} />
               </div>
               <p className="text-xs text-text-muted mt-3">
@@ -95,7 +96,7 @@ export default async function DashboardPage() {
           </>
         ) : (
           <Card className="text-center py-10">
-            <div className="text-5xl mb-4">☕</div>
+            <Coffee size={48} strokeWidth={1.5} className="mx-auto mb-4 text-brand opacity-70" aria-hidden />
             <p className="text-lg font-medium text-foreground">
               {lang === 'ar' ? 'لا يوجد اشتراك نشط' : 'No active subscription'}
             </p>

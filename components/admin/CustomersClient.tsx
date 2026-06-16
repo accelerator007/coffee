@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { Search, Pencil, Trash2 } from 'lucide-react'
 import { searchCustomers, updateCustomer, deleteCustomer } from '@/app/admin/customers/actions'
 import { Lang, t } from '@/lib/i18n'
 import Card from '@/components/ui/Card'
@@ -79,8 +80,8 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
     search(query)
   }
 
-  const inputClass = `w-full min-h-11 px-4 rounded-2xl border border-border bg-[#fdfaf5] text-foreground
-    placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-[#6f4e37]/20 focus:border-brand`
+  const inputClass = `w-full min-h-11 px-4 rounded-2xl border border-border bg-background text-foreground
+    placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand`
 
   return (
     <>
@@ -92,12 +93,15 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
       </div>
 
       <div className="relative">
-        <span className="absolute top-1/2 -translate-y-1/2 start-4 text-text-muted text-sm">🔍</span>
+        <span className="absolute top-1/2 -translate-y-1/2 start-4 text-text-muted">
+          <Search size={18} strokeWidth={1.75} aria-hidden />
+        </span>
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder={t('searchCustomers', lang)}
-          className="w-full min-h-12 ps-10 pe-4 rounded-full border border-border bg-surface text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-[#6f4e37]/20 focus:border-brand"
+          aria-label={t('searchCustomers', lang)}
+          className="w-full min-h-12 ps-11 pe-4 rounded-full border border-border bg-surface text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
           autoFocus
         />
         {loading && (
@@ -107,7 +111,7 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
 
       {!loading && data.length === 0 ? (
         <Card className="text-center text-text-muted py-10">
-          <div className="text-4xl mb-2">🔍</div>
+          <Search size={36} strokeWidth={1.5} className="mx-auto mb-2 opacity-60" aria-hidden />
           {ar ? 'لا توجد نتائج' : 'No results found'}
         </Card>
       ) : (
@@ -136,11 +140,11 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
                     />
                   </div>
 
-                  {error && <p className="text-sm text-red-500">{error}</p>}
+                  {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
                   {confirmDelete ? (
-                    <div className="flex flex-col gap-2 rounded-2xl bg-[#fce8e8] p-3">
-                      <p className="text-sm text-[#9b2335] font-medium text-center">
+                    <div className="flex flex-col gap-2 rounded-2xl bg-danger-bg p-3">
+                      <p className="text-sm text-danger font-medium text-center">
                         {ar ? 'تأكيد حذف العميل نهائياً؟' : 'Permanently delete this customer?'}
                       </p>
                       <div className="flex gap-2">
@@ -195,17 +199,19 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
                       </div>
                       <button
                         onClick={() => startEdit(row)}
+                        aria-label={ar ? 'تعديل' : 'Edit'}
                         title={ar ? 'تعديل' : 'Edit'}
-                        className="w-9 h-9 shrink-0 rounded-full bg-muted hover:bg-border text-brand flex items-center justify-center transition-colors"
+                        className="w-11 h-11 shrink-0 rounded-full bg-muted hover:bg-border text-brand flex items-center justify-center transition-colors"
                       >
-                        ✏️
+                        <Pencil size={18} strokeWidth={1.75} aria-hidden />
                       </button>
                       <button
                         onClick={() => { startEdit(row); setConfirmDelete(true) }}
+                        aria-label={ar ? 'حذف' : 'Delete'}
                         title={ar ? 'حذف' : 'Delete'}
-                        className="w-9 h-9 shrink-0 rounded-full bg-[#fce8e8] hover:bg-[#f9d8d8] flex items-center justify-center transition-colors"
+                        className="w-11 h-11 shrink-0 rounded-full bg-danger-bg hover:opacity-80 text-danger flex items-center justify-center transition-colors"
                       >
-                        🗑️
+                        <Trash2 size={18} strokeWidth={1.75} aria-hidden />
                       </button>
                     </div>
                   }

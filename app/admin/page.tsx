@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
+import { Users, CircleCheck, Clock, Coffee } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Lang, t } from '@/lib/i18n'
 import Card from '@/components/ui/Card'
@@ -52,7 +53,7 @@ export default async function AdminPage() {
             <Link href="/admin/packages" className="text-sm text-brand bg-muted hover:bg-border px-4 py-1.5 rounded-full transition-colors font-medium">
               {lang === 'ar' ? 'الباقات' : 'Packages'}
             </Link>
-            <Link href="/admin/customers" className="text-sm text-[#fdfaf5] bg-brand hover:bg-brand-dark px-4 py-1.5 rounded-full transition-colors font-medium">
+            <Link href="/admin/customers" className="text-sm text-background bg-brand hover:bg-brand-dark px-4 py-1.5 rounded-full transition-colors font-medium">
               {t('customers', lang)} ←
             </Link>
           </div>
@@ -61,10 +62,10 @@ export default async function AdminPage() {
         {/* KPI Grid */}
         {kpis && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 animate-fade-up">
-            <KPICard label={t('totalSubscribers', lang)} value={kpis.total_subscribers} icon="👥" />
-            <KPICard label={t('activeSubscribers', lang)} value={kpis.active_subscribers} icon="✅" color="text-[#2d6a4f]" />
-            <KPICard label={t('expiredSubscribers', lang)} value={kpis.expired_subscribers} icon="⏰" color="text-[#9b2335]" />
-            <KPICard label={t('totalRedemptions', lang)} value={kpis.total_redemptions} icon="☕" />
+            <KPICard label={t('totalSubscribers', lang)} value={kpis.total_subscribers} icon={Users} />
+            <KPICard label={t('activeSubscribers', lang)} value={kpis.active_subscribers} icon={CircleCheck} color="text-success" />
+            <KPICard label={t('expiredSubscribers', lang)} value={kpis.expired_subscribers} icon={Clock} color="text-danger" />
+            <KPICard label={t('totalRedemptions', lang)} value={kpis.total_redemptions} icon={Coffee} />
           </div>
         )}
 
