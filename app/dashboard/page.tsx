@@ -24,14 +24,14 @@ export default async function DashboardPage() {
   const cookieStore = await cookies()
   const lang: Lang = (cookieStore.get('lang')?.value as Lang) ?? 'ar'
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name')
-    .eq('id', user.id)
-    .single()
-
-  // Use SQL RPC to calculate days_left with Asia/Muscat timezone (avoids JS date math bugs)
-  const { data: subRaw } = await supabase.rpc('get_my_subscription').maybeSingle()
+  // Fetch profile and subscription in parallel (subscription days_left is
+  // computed in SQL with Asia/Muscat timezone to avoid JS date math bugs).
+  const [profileRes, subRes] = await Promise.all([
+    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
+    supabase.rpc('get_my_subscription').maybeSingle(),
+  ])
+  const profile = profileRes.data
+  const subRaw = subRes.data
   const sub = subRaw as {
     id: string; package_id: string; package_name: string;
     duration_days: number; daily_allowance: number;

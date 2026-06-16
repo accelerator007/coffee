@@ -20,18 +20,16 @@ export default async function AdminPage() {
   const cookieStore = await cookies()
   const lang: Lang = (cookieStore.get('lang')?.value as Lang) ?? 'ar'
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name')
-    .eq('id', user.id)
-    .single()
-
-  const [kpisRes, byPackageRes, trendRes] = await Promise.all([
+  // Run the profile lookup and all analytics RPCs in parallel (one round-trip
+  // batch) instead of fetching the profile first and then the RPCs.
+  const [profileRes, kpisRes, byPackageRes, trendRes] = await Promise.all([
+    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
     supabase.rpc('admin_overview_kpis'),
     supabase.rpc('admin_subscriptions_by_package'),
     supabase.rpc('admin_redemptions_last_30_days'),
   ])
 
+  const profile = profileRes.data
   const kpis = kpisRes.data?.[0]
   const byPackage = byPackageRes.data ?? []
   const trend = trendRes.data ?? []
