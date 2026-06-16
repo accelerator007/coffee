@@ -24,17 +24,13 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname
 
+  // Role is set in the auth user's metadata at creation (and kept in sync on
+  // update), so it rides inside the validated JWT — no profiles query needed.
+  const role = user?.user_metadata?.role as string | undefined
+
   // Public routes
   if (path === '/login' || path === '/') {
     if (user) {
-      // Get role and redirect to appropriate page
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-      const role = profile?.role
       if (role === 'customer') return NextResponse.redirect(new URL('/dashboard', request.url))
       if (role === 'employee') return NextResponse.redirect(new URL('/scan', request.url))
       if (role === 'admin') return NextResponse.redirect(new URL('/admin', request.url))
@@ -46,15 +42,6 @@ export async function proxy(request: NextRequest) {
   if (!user) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
-
-  // Get role for protected routes
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  const role = profile?.role
 
   // Role-based redirects
   if (path.startsWith('/dashboard') && role !== 'customer') {

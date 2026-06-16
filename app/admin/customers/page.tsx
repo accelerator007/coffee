@@ -15,15 +15,12 @@ export default async function CustomersPage() {
   const cookieStore = await cookies()
   const lang: Lang = (cookieStore.get('lang')?.value as Lang) ?? 'ar'
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name')
-    .eq('id', user.id)
-    .single()
+  // Display name comes from the JWT metadata — no profiles query needed.
+  const fullName = user.user_metadata?.full_name as string | undefined
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <AdminPageClient userName={profile?.full_name} lang={lang} />
+      <AdminPageClient userName={fullName} lang={lang} />
       <main className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full flex flex-col gap-4">
         <CustomersClient lang={lang} />
       </main>

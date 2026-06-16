@@ -24,14 +24,11 @@ export default async function DashboardPage() {
   const cookieStore = await cookies()
   const lang: Lang = (cookieStore.get('lang')?.value as Lang) ?? 'ar'
 
-  // Fetch profile and subscription in parallel (subscription days_left is
-  // computed in SQL with Asia/Muscat timezone to avoid JS date math bugs).
-  const [profileRes, subRes] = await Promise.all([
-    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
-    supabase.rpc('get_my_subscription').maybeSingle(),
-  ])
-  const profile = profileRes.data
-  const subRaw = subRes.data
+  // Display name comes from the JWT metadata — no profiles query needed.
+  const fullName = user.user_metadata?.full_name as string | undefined
+
+  // Subscription days_left is computed in SQL with Asia/Muscat timezone.
+  const { data: subRaw } = await supabase.rpc('get_my_subscription').maybeSingle()
   const sub = subRaw as {
     id: string; package_id: string; package_name: string;
     duration_days: number; daily_allowance: number;
@@ -55,7 +52,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <DashboardClient
-        userName={profile?.full_name}
+        userName={fullName}
         lang={lang}
       />
 

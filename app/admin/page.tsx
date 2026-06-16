@@ -20,23 +20,22 @@ export default async function AdminPage() {
   const cookieStore = await cookies()
   const lang: Lang = (cookieStore.get('lang')?.value as Lang) ?? 'ar'
 
-  // Run the profile lookup and all analytics RPCs in parallel (one round-trip
-  // batch) instead of fetching the profile first and then the RPCs.
-  const [profileRes, kpisRes, byPackageRes, trendRes] = await Promise.all([
-    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
+  // Display name comes from the JWT metadata — no profiles query needed.
+  const fullName = user.user_metadata?.full_name as string | undefined
+
+  const [kpisRes, byPackageRes, trendRes] = await Promise.all([
     supabase.rpc('admin_overview_kpis'),
     supabase.rpc('admin_subscriptions_by_package'),
     supabase.rpc('admin_redemptions_last_30_days'),
   ])
 
-  const profile = profileRes.data
   const kpis = kpisRes.data?.[0]
   const byPackage = byPackageRes.data ?? []
   const trend = trendRes.data ?? []
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <AdminPageClient userName={profile?.full_name} lang={lang} />
+      <AdminPageClient userName={fullName} lang={lang} />
 
       <main className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full flex flex-col gap-6">
         <div className="flex flex-col gap-3">
