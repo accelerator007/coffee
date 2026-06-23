@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import ListRow from '@/components/ui/ListRow'
+import TierBadge from '@/components/ui/TierBadge'
 
 type CustomerRow = Awaited<ReturnType<typeof searchCustomers>>[number]
 
@@ -187,10 +188,13 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
                   trailing={
                     <div className="flex items-center gap-2">
                       <div className="flex flex-col items-end gap-1 me-1">
-                        {row.status
-                          ? <Badge status={row.status} label={t(row.status, lang)} />
-                          : <span className="text-text-muted text-xs">—</span>
-                        }
+                        <span className="flex items-center gap-1.5">
+                          <TierBadge tier={row.tier} lang={lang} />
+                          {row.status
+                            ? <Badge status={row.status} label={t(row.status, lang)} />
+                            : <span className="text-text-muted text-xs">—</span>
+                          }
+                        </span>
                         {row.days_left != null && (
                           <span className="text-xs text-text-muted">
                             {Math.max(0, row.days_left)} {ar ? 'يوم' : 'days'}

@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Coffee } from 'lucide-react'
 import { Lang } from '@/lib/i18n'
-import { createPackage, updatePackage } from './actions'
+import { createPackage, updatePackage, type Tier } from './actions'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
+import TierBadge from '@/components/ui/TierBadge'
 
 type Package = {
   id: string
@@ -14,9 +15,11 @@ type Package = {
   duration_days: number
   daily_allowance: number
   price: number
+  tier: string | null
 }
 
-const empty = { name: '', duration_days: '', daily_allowance: '', price: '' }
+const empty = { name: '', duration_days: '', daily_allowance: '', price: '', tier: '' }
+const TIERS: Tier[] = ['gold', 'silver', 'bronze']
 
 export default function PackagesClient({ lang, packages }: { lang: Lang; packages: Package[] }) {
   const router = useRouter()
@@ -36,6 +39,7 @@ export default function PackagesClient({ lang, packages }: { lang: Lang; package
       duration_days: String(p.duration_days),
       daily_allowance: String(p.daily_allowance),
       price: String(p.price),
+      tier: p.tier ?? '',
     })
     setError('')
   }
@@ -65,7 +69,8 @@ export default function PackagesClient({ lang, packages }: { lang: Lang; package
     }
 
     setLoading(true)
-    const payload = { name, duration_days, daily_allowance, price }
+    const tier = (form.tier || null) as Tier | null
+    const payload = { name, duration_days, daily_allowance, price, tier }
     const result = editingId === 'new'
       ? await createPackage(payload)
       : await updatePackage(editingId!, payload)
@@ -133,6 +138,21 @@ export default function PackagesClient({ lang, packages }: { lang: Lang; package
                 className={inputClass} dir="ltr"
               />
             </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">{ar ? 'الفئة' : 'Tier'}</label>
+              <select
+                value={form.tier}
+                onChange={e => setForm({ ...form, tier: e.target.value })}
+                className={inputClass}
+              >
+                <option value="">{ar ? 'بدون فئة' : 'No tier'}</option>
+                {TIERS.map(tr => (
+                  <option key={tr} value={tr}>
+                    {tr === 'gold' ? (ar ? 'ذهبية' : 'Gold') : tr === 'silver' ? (ar ? 'فضية' : 'Silver') : (ar ? 'برونزية' : 'Bronze')}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
@@ -162,7 +182,10 @@ export default function PackagesClient({ lang, packages }: { lang: Lang; package
                   <Coffee size={22} strokeWidth={1.75} aria-hidden />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-foreground truncate">{p.name}</h4>
+                  <span className="inline-flex items-center gap-2">
+                    <h4 className="font-bold text-foreground truncate">{p.name}</h4>
+                    <TierBadge tier={p.tier} lang={lang} />
+                  </span>
                   <p className="text-sm text-text-muted">
                     {p.duration_days} {ar ? 'يوم' : 'd'} · {p.daily_allowance} {ar ? 'كوب/يوم' : 'cups'} · {p.price} {ar ? 'ر.ع' : 'OMR'}
                   </p>

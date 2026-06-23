@@ -1,29 +1,99 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   District 7 — Design tokens
+   Premium · minimalist · monochrome. Solid black on pure white. Light only.
+   Ported from the District 7 Design System (tokens/*.css).
+   ========================================================================== */
 :root {
-  --background: #fdfaf5;
-  --surface: #ffffff;
-  --surface-warm: #faf4ec;
-  --muted: #f3e9da;
-  --border: #e8d8c3;
+  /* --- Base surfaces --- */
+  --background:    #ffffff;
+  --surface:       #fcfcfc;
+  --surface-warm:  #fafafa;
+  --muted:         #f5f5f5;
+  --border:        #e5e5e5;
+  --border-strong: #d4d4d4;
 
-  --brand: #6f4e37;
-  --brand-dark: #5a3e2b;
-  --brand-darker: #3d2b1f;
-  --latte: #b9966f;
-  --latte-dark: #a87e54;
-  --accent: #c98a3c;
+  /* --- Mono ink ramp (kept under brand-* names for compatibility) --- */
+  --brand:         #000000; /* solid black — primary           */
+  --brand-dark:    #333333; /* hover / pressed grey            */
+  --brand-darker:  #000000; /* darkest ink                     */
+  --latte:         #737373; /* mid grey (secondary)            */
+  --latte-dark:    #525252;
+  --accent:        #111111; /* monochrome accent = ink         */
 
-  --foreground: #3d2b1f;
-  --text-muted: #a87e54;
-  --brand-light: #b9966f;
+  /* --- Text --- */
+  --foreground:    #111111;
+  --text-muted:    #737373;
+  --brand-light:   #737373;
 
-  /* Status colors — tuned to sit within the warm beige/brown palette */
-  --success: #2d6a4f;
-  --success-bg: #e6f4ec;
-  --danger: #9b2335;
-  --danger-bg: #fce8e8;
-  --danger-bg-hover: #f9d8d8;
+  /* --- Semantic status (restrained, used sparingly) --- */
+  --success:          #1f7a4d;
+  --success-bg:       #eef5f1;
+  --warning:          #7a5d1f;
+  --warning-bg:       #f6f1e6;
+  --danger:           #b3261e;
+  --danger-bg:        #f7eceb;
+  --danger-bg-hover:  #f0dddb;
+
+  /* ===== D7 aliases consumed by the ported primitives ===== */
+  --d7-bg:           var(--background);
+  --d7-surface:      var(--surface);
+  --d7-surface-warm: var(--surface-warm);
+  --d7-muted:        var(--muted);
+  --d7-border:       var(--border);
+  --d7-brand:        var(--brand);
+  --d7-foreground:   var(--foreground);
+  --d7-text-muted:   var(--text-muted);
+  --d7-accent:       var(--accent);
+  --d7-success:      var(--success);
+  --d7-success-soft: var(--success-bg);
+  --d7-danger:       var(--danger);
+  --d7-danger-soft:  var(--danger-bg);
+
+  --surface-card:    var(--surface);
+  --text-strong:     var(--foreground);
+  --text-on-brand:   #ffffff;
+  --action-primary:  #000000;
+  --action-primary-press: #333333;
+
+  /* --- Type families (composed from the next/font variables set in layout) --- */
+  --font-display: var(--font-playfair), var(--font-amiri), Georgia, serif;
+  --font-heading: var(--font-playfair), var(--font-amiri), Georgia, serif;
+  --font-body:    var(--font-inter), var(--font-almarai), system-ui, sans-serif;
+
+  /* --- Type scale & roles (mobile-first) --- */
+  --fs-display: 38px;
+  --type-display: 700 var(--fs-display)/1.1  var(--font-display);
+  --type-h1:      700 28px/1.1               var(--font-display);
+  --type-h2:      600 22px/1.3               var(--font-display);
+  --type-h3:      600 18px/1.3               var(--font-display);
+  --type-body:        400 15px/1.65          var(--font-body);
+  --type-body-strong: 600 15px/1.65          var(--font-body);
+  --type-caption: 400 13px/1.3               var(--font-body);
+  --type-label:   600 11px/1.3               var(--font-body);
+
+  /* --- Corner radii --- */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --radius-pill: 9999px;
+
+  /* --- Shadows — minimal; structure comes from 1px borders --- */
+  --shadow-card:   none;
+  --shadow-raised: 0 6px 22px rgba(17, 17, 17, 0.07);
+  --shadow-pop:    0 24px 60px rgba(17, 17, 17, 0.16);
+  --shadow-glow:   0 0 0 3px rgba(0, 0, 0, 0.10);
+
+  /* --- Motion — mature: smooth fades & slow slide-ups, no bounce --- */
+  --ease-out:  cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast:  0.2s;
+  --dur-base:  0.4s;
+  --dur-page:  0.55s;
+
+  /* --- Login / ambient wash --- */
+  --wash-login: linear-gradient(180deg, #f7f7f8 0%, #ffffff 60%);
 }
 
 @theme inline {
@@ -43,38 +113,62 @@
   --color-success-bg: var(--success-bg);
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
-  --font-sans: var(--font-almarai), system-ui, sans-serif;
-  --font-heading: var(--font-cairo), var(--font-almarai), system-ui, sans-serif;
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-display);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
-  line-height: 1.6;
+  font-family: var(--font-body);
+  line-height: 1.65;
 }
 
 h1, h2, h3, h4 {
-  font-family: var(--font-heading);
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* ==========================================================================
+   Motion — soft fade-in + slow slide-up, no bounce. Respects reduced motion.
+   ========================================================================== */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes d7laser {
+  0%   { top: 8%;  opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { top: 92%; opacity: 0; }
+}
+@keyframes d7grow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+@keyframes d7rowin {
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-up {
-  animation: fadeUp 0.35s ease both;
+.animate-fade-up { animation: fadeUp var(--dur-base) var(--ease-out) both; }
+
+/* Brand fills — solid (the monochrome system uses no strong gradients). */
+.bg-brand-gradient  { background-color: var(--brand); }
+.bg-accent-gradient { background-color: var(--accent); }
+
+/* Glass sticky surfaces — echo the blurred logo backdrop. */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
-/* Brand gradient utilities — replace inline hex gradients across components */
-.bg-brand-gradient {
-  background-image: linear-gradient(135deg, var(--brand) 0%, var(--brand-darker) 100%);
-}
-.bg-accent-gradient {
-  background-image: linear-gradient(90deg, var(--accent) 0%, var(--brand) 100%);
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up { animation: none; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }

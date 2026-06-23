@@ -1,5 +1,21 @@
 export type Lang = 'ar' | 'en'
 
+/** District 7 brand constants (Sohar branch). */
+export const brand = {
+  name: 'District 7',
+  nameAr: 'ديستركت 7',
+  tagline: 'Specialty Coffee',
+  taglineAr: 'قهوة مختصة',
+  location: 'Sohar University, City Center',
+  locationAr: 'جامعة صحار، سيتي سنتر',
+  shortLocation: 'Sohar · City Center',
+  shortLocationAr: 'صحار · سيتي سنتر',
+  phone: '+968 9989 9865',
+  beans: 'True Roasters',
+  beansAr: 'ترو روسترز',
+  instagram: '@district7.om',
+} as const
+
 const translations = {
   // Auth
   login: { ar: 'تسجيل الدخول', en: 'Login' },
@@ -46,6 +62,40 @@ const translations = {
   searchCustomers: { ar: 'ابحث بالاسم أو الهاتف', en: 'Search by name or phone' },
   name: { ar: 'الاسم', en: 'Name' },
   timesUsed: { ar: 'مرات الاستخدام', en: 'Times Used' },
+  // Dashboard — District 7 screens
+  welcomeBack: { ar: 'أهلاً', en: 'Welcome back' },
+  currentPlan: { ar: 'الباقة الحالية', en: 'Current Plan' },
+  memberSince: { ar: 'عضو منذ', en: 'since' },
+  thisMonth: { ar: 'هذا الشهر', en: 'This month' },
+  cups: { ar: 'كوب', en: 'cups' },
+  todaysCups: { ar: 'أكواب اليوم', en: "Today's cups" },
+  leftToday: { ar: 'متبقٍ اليوم', en: 'left today' },
+  myCode: { ar: 'رمزي', en: 'My Code' },
+  scanToRedeem: { ar: 'امسح الرمز لاستلام قهوتك', en: 'Scan at the counter to redeem your cup' },
+  showToStaff: { ar: 'اعرضه للموظف لتسجيل كوبك', en: 'Show to staff to redeem your cup' },
+  contactToSubscribe: { ar: 'تواصل معنا للاشتراك', en: 'Contact us to subscribe' },
+  fromOurFeed: { ar: 'من حسابنا', en: 'From our feed' },
+  beansBy: { ar: 'حبوب من ترو روسترز', en: 'Beans by True Roasters' },
+  // Scan — staff
+  redeemCup: { ar: 'تسجيل كوب', en: 'Redeem a cup' },
+  alignQr: { ar: 'وجّه رمز العميل داخل الإطار', en: "Align the customer's QR within the frame" },
+  readyToRead: { ar: 'جاهز للقراءة', en: 'Ready to read' },
+  holdCard: { ar: 'قرّب بطاقة العضو من الجهاز', en: 'Hold the member card near the device' },
+  cupRedeemed: { ar: 'تم تسجيل الكوب', en: 'Cup redeemed' },
+  cupLogged: { ar: 'تم تسجيل ‎+1 كوب', en: '+1 cup logged' },
+  // Admin — District 7
+  today: { ar: 'اليوم', en: 'Today' },
+  revenue: { ar: 'الإيرادات (شهرياً)', en: 'Revenue (mo.)' },
+  activePlans: { ar: 'الباقات الفعّالة', en: 'Active plans' },
+  cupsToday: { ar: 'أكواب اليوم', en: 'Cups today' },
+  totalCustomers: { ar: 'إجمالي العملاء', en: 'Total customers' },
+  cupsPerDay: { ar: 'الأكواب يومياً', en: 'Cups per day' },
+  thisWeek: { ar: 'هذا الأسبوع', en: 'This week' },
+  // Tiers
+  tierGold: { ar: 'ذهبية', en: 'Gold' },
+  tierSilver: { ar: 'فضية', en: 'Silver' },
+  tierBronze: { ar: 'برونزية', en: 'Bronze' },
+  tier: { ar: 'الفئة', en: 'Tier' },
   // Common
   loading: { ar: 'جارٍ التحميل...', en: 'Loading...' },
   error: { ar: 'حدث خطأ', en: 'An error occurred' },

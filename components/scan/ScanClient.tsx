@@ -2,12 +2,13 @@
 
 import { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import { Camera, Nfc, TriangleAlert, CircleCheck } from 'lucide-react'
+import { QrCode, Nfc, ScanLine, TriangleAlert, CircleCheck } from 'lucide-react'
 import { Lang, t } from '@/lib/i18n'
 import { getCustomerByQR, nfcRedeem, recordRedemption } from '@/app/scan/actions'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
+import SegmentedTabs from '@/components/ui/SegmentedTabs'
 import NFCScanner from './NFCScanner'
 
 const QRScanner = dynamic(() => import('./QRScanner'), { ssr: false })
@@ -94,38 +95,33 @@ export default function ScanClient({ lang }: { lang: Lang }) {
 
   if (state === 'scanning') {
     return (
-      <div className="flex flex-col gap-4">
-        {/* Tabs */}
-        <div className="flex rounded-2xl overflow-hidden border border-border">
-          <button
-            onClick={() => setTab('qr')}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors inline-flex items-center justify-center gap-2 ${
-              tab === 'qr' ? 'bg-brand text-white' : 'bg-surface text-text-muted hover:text-foreground'
-            }`}
-          >
-            <Camera size={18} strokeWidth={1.75} aria-hidden />
-            {ar ? 'رمز QR' : 'QR Code'}
-          </button>
-          <button
-            onClick={() => setTab('nfc')}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors inline-flex items-center justify-center gap-2 ${
-              tab === 'nfc' ? 'bg-brand text-white' : 'bg-surface text-text-muted hover:text-foreground'
-            }`}
-          >
-            <Nfc size={18} strokeWidth={1.75} aria-hidden />
-            {ar ? 'بطاقة NFC' : 'NFC Card'}
-          </button>
-        </div>
+      <div className="flex flex-col gap-5">
+        <SegmentedTabs
+          block
+          value={tab}
+          onChange={(v) => setTab(v as Tab)}
+          tabs={[
+            { value: 'qr', label: 'QR', icon: <QrCode size={16} aria-hidden /> },
+            { value: 'nfc', label: 'NFC', icon: <Nfc size={16} aria-hidden /> },
+          ]}
+        />
 
         {tab === 'qr' && (
-          <>
-            <p className="text-center text-text-muted text-sm">{t('scanInstruction', lang)}</p>
-            <QRScanner onScan={handleScan} onError={() => { setErrorMsg(ar ? 'لا يمكن الوصول للكاميرا' : 'Camera access denied'); setState('error') }} />
-          </>
+          <Card variant="warm" className="flex flex-col items-center gap-4">
+            <div className="w-full max-w-[280px] mx-auto">
+              <QRScanner
+                onScan={handleScan}
+                onError={() => { setErrorMsg(ar ? 'لا يمكن الوصول للكاميرا' : 'Camera access denied'); setState('error') }}
+              />
+            </div>
+            <p className="text-center text-text-muted text-[13px]">{t('alignQr', lang)}</p>
+          </Card>
         )}
 
         {tab === 'nfc' && (
-          <NFCScanner onScan={handleNFCScan} lang={lang} />
+          <Card variant="warm">
+            <NFCScanner onScan={handleNFCScan} lang={lang} />
+          </Card>
         )}
       </div>
     )
@@ -134,49 +130,50 @@ export default function ScanClient({ lang }: { lang: Lang }) {
   if (state === 'loading') {
     return (
       <div className="flex items-center justify-center py-16">
-        <span className="inline-block w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
+        <span className="inline-block w-8 h-8 border-[3px] border-foreground border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   if (state === 'error') {
     return (
-      <div className="flex flex-col items-center gap-4 py-8 text-center">
+      <Card className="flex flex-col items-center gap-4 py-10 text-center">
         <TriangleAlert size={56} strokeWidth={1.5} className="text-danger" aria-hidden />
-        <p role="alert" className="text-danger font-medium">{errorMsg}</p>
+        <p role="alert" className="text-danger font-semibold">{errorMsg}</p>
         <Button onClick={reset} variant="secondary">{t('scanAgain', lang)}</Button>
-      </div>
+      </Card>
     )
   }
 
   if (state === 'nfc_success' && nfcResult) {
     return (
-      <div className="flex flex-col items-center gap-4 py-8 text-center">
-        <CircleCheck size={64} strokeWidth={1.5} className="text-success" aria-hidden />
-        <p className="text-success font-semibold text-xl">{nfcResult.customerName}</p>
+      <Card variant="feature" className="flex flex-col items-center gap-3 py-10 text-center animate-fade-up">
+        <CircleCheck size={80} strokeWidth={1.5} className="text-foreground" aria-hidden />
+        <h3 className="text-xl font-semibold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>{nfcResult.customerName}</h3>
         <p className="text-text-muted text-sm">{nfcResult.packageName}</p>
-        <div className="flex gap-6 mt-2">
+        <div className="flex gap-8 mt-2">
           <div className="flex flex-col items-center">
-            <span className="text-3xl font-bold text-brand">{nfcResult.remaining}</span>
+            <span className="text-3xl font-bold text-foreground tabular-nums" style={{ fontFamily: 'var(--font-display)' }}>{nfcResult.remaining}</span>
             <span className="text-xs text-text-muted">{ar ? 'كوب متبقي اليوم' : 'cups left today'}</span>
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-3xl font-bold text-brand">{nfcResult.daysLeft}</span>
+            <span className="text-3xl font-bold text-foreground tabular-nums" style={{ fontFamily: 'var(--font-display)' }}>{nfcResult.daysLeft}</span>
             <span className="text-xs text-text-muted">{ar ? 'يوم متبقي' : 'days left'}</span>
           </div>
         </div>
-        <p className="text-xs text-text-muted mt-2">{ar ? 'سيتم المسح مجدداً خلال ثوانٍ...' : 'Ready to scan again shortly...'}</p>
-      </div>
+        <Badge variant="success" dot className="mt-2">{t('cupLogged', lang)}</Badge>
+      </Card>
     )
   }
 
   if (state === 'success') {
     return (
-      <div className="flex flex-col items-center gap-4 py-8 text-center">
-        <CircleCheck size={64} strokeWidth={1.5} className="text-success" aria-hidden />
-        <p className="text-success font-semibold text-lg">{t('redemptionSuccess', lang)}</p>
+      <Card variant="feature" className="flex flex-col items-center gap-4 py-10 text-center animate-fade-up">
+        <CircleCheck size={80} strokeWidth={1.5} className="text-foreground" aria-hidden />
+        <h3 className="text-xl font-semibold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>{t('cupRedeemed', lang)}</h3>
+        <p className="text-success font-semibold text-sm">{t('redemptionSuccess', lang)}</p>
         <Button onClick={reset}>{t('scanAgain', lang)}</Button>
-      </div>
+      </Card>
     )
   }
 
@@ -190,20 +187,20 @@ export default function ScanClient({ lang }: { lang: Lang }) {
   return (
     <div className="flex flex-col gap-4">
       <Card>
-        <h3 className="font-semibold text-lg mb-3">{t('customerInfo', lang)}</h3>
-        <div className="flex flex-col gap-2 text-sm">
-          <div className="flex justify-between">
+        <h3 className="font-semibold text-lg mb-3" style={{ fontFamily: 'var(--font-display)' }}>{t('customerInfo', lang)}</h3>
+        <div className="flex flex-col gap-2.5 text-sm">
+          <div className="flex justify-between items-center">
             <span className="text-text-muted">{t('name', lang)}</span>
-            <span className="font-medium">{data.customer.full_name}</span>
+            <span className="font-semibold text-foreground">{data.customer.full_name}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center">
             <span className="text-text-muted">{t('phone', lang)}</span>
-            <span className="font-medium" dir="ltr">{data.customer.phone ?? '—'}</span>
+            <span className="font-semibold text-foreground" dir="ltr">{data.customer.phone ?? '—'}</span>
           </div>
           {pkg && (
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span className="text-text-muted">{t('packageName', lang)}</span>
-              <span className="font-medium">{pkg.name}</span>
+              <span className="font-semibold text-foreground">{pkg.name}</span>
             </div>
           )}
           <div className="flex justify-between items-center">
@@ -212,13 +209,13 @@ export default function ScanClient({ lang }: { lang: Lang }) {
           </div>
           {isActive && (
             <>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-text-muted">{t('daysLeft', lang)}</span>
-                <span className="font-medium">{data.daysLeft}</span>
+                <span className="font-semibold text-foreground">{data.daysLeft}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-text-muted">{lang === 'ar' ? 'كوبات متبقية اليوم' : 'Cups left today'}</span>
-                <span className={`font-semibold ${remaining === 0 ? 'text-danger' : 'text-success'}`}>
+                <span className={`font-bold ${remaining === 0 ? 'text-danger' : 'text-success'}`}>
                   {remaining} / {pkg?.daily_allowance}
                 </span>
               </div>
@@ -228,17 +225,11 @@ export default function ScanClient({ lang }: { lang: Lang }) {
       </Card>
 
       <div className="flex gap-3">
-        <Button
-          onClick={handleRecord}
-          loading={recording}
-          disabled={!canRedeem}
-          className="flex-1"
-        >
+        <Button onClick={handleRecord} loading={recording} disabled={!canRedeem} className="flex-1">
+          <ScanLine size={18} aria-hidden />
           {t('recordRedemption', lang)}
         </Button>
-        <Button onClick={reset} variant="secondary">
-          {t('scanAgain', lang)}
-        </Button>
+        <Button onClick={reset} variant="secondary">{t('scanAgain', lang)}</Button>
       </div>
 
       {!canRedeem && isActive && remaining === 0 && (

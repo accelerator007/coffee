@@ -18,15 +18,17 @@ export default function NFCScanner({ onScan, lang }: Props) {
   const ar = lang === 'ar'
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !('NDEFReader' in window)) {
-      setNfcSupported(false)
-      return
+    // Feature-detect off the main effect body so state updates only happen in
+    // async callbacks (avoids set-state-in-effect cascading renders).
+    if (!('NDEFReader' in window)) {
+      const id = requestAnimationFrame(() => setNfcSupported(false))
+      return () => cancelAnimationFrame(id)
     }
-    setNfcSupported(true)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reader = new (window as any).NDEFReader()
     reader.scan()
       .then(() => {
+        setNfcSupported(true)
         setNfcReading(true)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         reader.onreading = (event: any) => {
@@ -53,7 +55,7 @@ export default function NFCScanner({ onScan, lang }: Props) {
       )}
 
       {nfcSupported === false && (
-        <p className="text-sm text-amber-600 text-center">
+        <p className="text-sm text-text-muted text-center">
           {ar ? 'NFC غير مدعوم على هذا الجهاز' : 'NFC not supported on this device'}
         </p>
       )}

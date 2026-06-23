@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { Phone } from 'lucide-react'
 import { Lang, t } from '@/lib/i18n'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -36,20 +37,16 @@ export default function PhoneLoginForm({ lang }: { lang: Lang }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-2 items-end">
-        <span className="min-h-11 flex items-center px-3 bg-muted border border-border rounded-2xl text-text-muted text-sm font-mono" dir="ltr">
-          +968
-        </span>
-        <Input
-          label={t('phone', lang)}
-          type="tel"
-          inputMode="numeric"
-          placeholder="9XXXXXXX"
-          value={phone}
-          onChange={e => setPhone(e.target.value)}
-          ltr
-        />
-      </div>
+      <Input
+        label={t('phone', lang)}
+        type="tel"
+        inputMode="numeric"
+        prefix="+968"
+        placeholder="9XXX XXXX"
+        value={phone}
+        onChange={e => setPhone(e.target.value)}
+        ltr
+      />
       <Input
         label={t('password', lang)}
         type="password"
@@ -59,7 +56,8 @@ export default function PhoneLoginForm({ lang }: { lang: Lang }) {
         error={error}
         ltr
       />
-      <Button onClick={handleLogin} loading={loading} className="w-full">
+      <Button onClick={handleLogin} loading={loading} size="lg" block>
+        <Phone size={18} aria-hidden />
         {t('signIn', lang)}
       </Button>
     </div>
