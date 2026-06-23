@@ -63,13 +63,14 @@ export async function searchCustomers(q: string) {
 
   return (profiles ?? []).map((p) => {
     const rpc = rpcMap.get(p.id) as {
-      package_name?: string; status?: string; days_left?: number; times_used?: number
+      package_name?: string; tier?: string | null; status?: string; days_left?: number; times_used?: number
     } | undefined
     return {
       id: p.id,
       full_name: p.full_name,
       phone: p.phone,
       package_name: rpc?.package_name ?? null,
+      tier: rpc?.tier ?? null,
       status: (rpc?.status ?? null) as 'active' | 'expired' | null,
       days_left: rpc?.days_left ?? null,
       times_used: rpc?.times_used ?? null,

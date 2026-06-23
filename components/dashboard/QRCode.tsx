@@ -3,22 +3,23 @@
 import { useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
 
-export default function QRCodeDisplay({ value }: { value: string }) {
+export default function QRCodeDisplay({ value, size = 200 }: { value: string; size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     if (canvasRef.current) {
+      // Monochrome: ink modules on pure white (District 7).
       QRCode.toCanvas(canvasRef.current, value, {
-        width: 220,
+        width: size,
         margin: 2,
-        color: { dark: '#6B3F1F', light: '#FDF6EC' }
+        color: { dark: '#111111', light: '#ffffff' },
       })
     }
-  }, [value])
+  }, [value, size])
 
   return (
-    <div className="flex justify-center p-4">
-      <canvas ref={canvasRef} className="rounded-2xl" />
+    <div className="inline-flex justify-center rounded-xl bg-surface-warm p-3.5">
+      <canvas ref={canvasRef} className="rounded-lg block" />
     </div>
   )
 }

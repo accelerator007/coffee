@@ -52,7 +52,7 @@ export default function StaffLoginForm({ lang }: { lang: Lang }) {
         error={error}
         ltr
       />
-      <Button onClick={handleLogin} loading={loading} className="w-full">
+      <Button onClick={handleLogin} loading={loading} size="lg" block>
         {t('signIn', lang)}
       </Button>
     </div>

@@ -1,12 +1,27 @@
 import type { Metadata } from 'next'
-import { Cairo, Almarai } from 'next/font/google'
+import { Playfair_Display, Amiri, Inter, Almarai } from 'next/font/google'
 import './globals.css'
 
-const cairo = Cairo({
-  subsets: ['arabic'],
-  variable: '--font-cairo',
+// Display / headings / numbers — elegant serif (Latin + Arabic).
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair',
   display: 'swap',
-  weight: ['400', '600', '700', '800', '900'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+})
+
+const amiri = Amiri({
+  subsets: ['arabic'],
+  variable: '--font-amiri',
+  display: 'swap',
+  weight: ['400', '700'],
+})
+
+// Body / UI — clean sans (Latin + Arabic).
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
 })
 
 const almarai = Almarai({
@@ -17,13 +32,17 @@ const almarai = Almarai({
 })
 
 export const metadata: Metadata = {
-  title: 'Coffee | كافي',
-  description: 'إدارة اشتراكات القهوة',
+  title: 'District 7 · ديستركت 7',
+  description: 'Specialty coffee loyalty & subscriptions · ولاء واشتراكات القهوة المختصة',
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ar" dir="rtl" className={`${cairo.variable} ${almarai.variable} h-full antialiased`}>
+    <html
+      lang="ar"
+      dir="rtl"
+      className={`${playfair.variable} ${amiri.variable} ${inter.variable} ${almarai.variable} h-full antialiased`}
+    >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
       </body>

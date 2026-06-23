@@ -3,8 +3,7 @@ export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
-import { Lang, t } from '@/lib/i18n'
-import Header from '@/components/layout/Header'
+import { Lang, t, brand } from '@/lib/i18n'
 import ScanClient from '@/components/scan/ScanClient'
 import ScanPageClient from './ScanPageClient'
 
@@ -22,8 +21,13 @@ export default async function ScanPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <ScanPageClient userName={fullName} lang={lang} />
-      <main className="flex-1 px-4 py-6 max-w-md mx-auto w-full flex flex-col gap-4">
-        <h1 className="text-xl font-bold text-brand">{t('scanTitle', lang)}</h1>
+      <main className="flex-1 px-[18px] py-6 max-w-md mx-auto w-full flex flex-col gap-5 animate-fade-up">
+        <div>
+          <p className="text-[13px] text-text-muted mb-0.5">{t('staff', lang)} · {lang === 'ar' ? brand.shortLocationAr : brand.shortLocation}</p>
+          <h1 className="text-[28px] font-bold text-foreground leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            {t('redeemCup', lang)}
+          </h1>
+        </div>
         <ScanClient lang={lang} />
       </main>
     </div>
