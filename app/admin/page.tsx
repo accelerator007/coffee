@@ -65,6 +65,9 @@ export default async function AdminPage() {
             <Link href="/admin/packages" className={`${navLink} text-foreground bg-muted hover:bg-border`}>
               {lang === 'ar' ? 'الباقات' : 'Packages'}
             </Link>
+            <Link href="/admin/cards" className={`${navLink} text-foreground bg-muted hover:bg-border`}>
+              {t('cards', lang)}
+            </Link>
             <Link href="/admin/customers" className={`${navLink} text-background bg-brand hover:bg-brand-dark`}>
               {t('customers', lang)} ←
             </Link>

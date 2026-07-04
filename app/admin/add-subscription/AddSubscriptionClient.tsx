@@ -128,6 +128,11 @@ export default function AddSubscriptionClient({ lang, customers, packages, prese
             className={selectClass}
             dir="ltr"
           />
+          <p className="text-xs text-text-muted">
+            {lang === 'ar'
+              ? 'سيتم إنشاء البطاقة وربطها بالعميل تلقائياً — يمكن إدارتها من صفحة البطاقات'
+              : 'The card will be created and linked to the customer automatically — manage it from the Cards page'}
+          </p>
         </div>
 
         {error && <p role="alert" className="text-sm text-danger">{error}</p>}

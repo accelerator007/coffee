@@ -10,6 +10,21 @@ interface Props {
   lang: Lang
 }
 
+/**
+ * Extract a card UID from a Web NFC reading event: the first NDEF text record
+ * wins; blank/UID-only tags fall back to the hardware serial number. The admin
+ * card-capture button uses the same precedence so stored UIDs match scans.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function decodeCardUid(event: any): string {
+  const record = event.message?.records?.[0]
+  if (record?.data) {
+    const text = new TextDecoder().decode(record.data).trim()
+    if (text) return text
+  }
+  return (event.serialNumber ?? '').trim()
+}
+
 export default function NFCScanner({ onScan, lang }: Props) {
   const [nfcSupported, setNfcSupported] = useState<boolean | null>(null)
   const [nfcReading, setNfcReading] = useState(false)
@@ -32,10 +47,8 @@ export default function NFCScanner({ onScan, lang }: Props) {
         setNfcReading(true)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         reader.onreading = (event: any) => {
-          const record = event.message.records[0]
-          if (!record) return
-          const text = new TextDecoder().decode(record.data)
-          onScan(text)
+          const uid = decodeCardUid(event)
+          if (uid) onScan(uid)
         }
       })
       .catch(() => {

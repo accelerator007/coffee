@@ -57,22 +57,50 @@ export async function getCustomerByQR(customerId: string) {
   }
 }
 
-export async function getCustomerByNFC(nfcCardId: string) {
-  if (!nfcCardId.trim()) return { error: 'invalid_nfc' as const }
+type ScanProfile = { id: string; full_name: string; phone: string | null }
+
+/**
+ * Look up a physical card in the cards registry and return its customer.
+ * A card with no linked customer is unusable regardless of its status.
+ */
+async function resolveCard(cardUid: string) {
+  const uid = cardUid.trim()
+  if (!uid) return { error: 'invalid_nfc' as const }
 
   const supabase = await createClient()
+  const { data: card } = await supabase
+    .from('cards')
+    .select('id, status, customer_id, customer:profiles!customer_id(id, full_name, phone)')
+    .eq('card_uid', uid)
+    .maybeSingle()
 
+  if (!card) return { error: 'invalid_nfc' as const }
+  if (card.status === 'blocked') return { error: 'card_blocked' as const }
+  if (card.status === 'lost') return { error: 'card_lost' as const }
+  if (!card.customer_id || !card.customer) return { error: 'card_unassigned' as const }
+
+  return { customer: card.customer as unknown as ScanProfile }
+}
+
+export async function getCustomerByNFC(nfcCardId: string) {
+  const resolved = await resolveCard(nfcCardId)
+  if ('error' in resolved) return { error: resolved.error }
+
+  const supabase = await createClient()
   const { data: subscription } = await supabase
     .from('subscriptions')
-    .select('*, packages(*), profiles!customer_id(id, full_name, phone)')
-    .eq('nfc_card_id', nfcCardId.trim())
+    .select('*, packages(*)')
+    .eq('customer_id', resolved.customer.id)
     .order('start_date', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
-  if (!subscription) return { error: 'invalid_nfc' as const }
+  if (!subscription) {
+    return { customer: resolved.customer, subscription: null, daysLeft: 0, todayUsed: 0 }
+  }
 
-  const profile = subscription.profiles as { id: string; full_name: string; phone: string }
+  const profile = resolved.customer
   const today = getMuscatDate()
   const daysLeft = subscription.duration_days - Math.floor(
     (new Date(today).getTime() - new Date(subscription.start_date).getTime()) / 86400000
@@ -93,19 +121,21 @@ export async function getCustomerByNFC(nfcCardId: string) {
 }
 
 export async function nfcRedeem(nfcCardId: string) {
-  if (!nfcCardId.trim()) return { error: 'invalid_nfc' as const }
+  const resolved = await resolveCard(nfcCardId)
+  if ('error' in resolved) return { error: resolved.error }
 
   const supabase = await createClient()
 
   const { data: subscription } = await supabase
     .from('subscriptions')
-    .select('*, packages(*), profiles!customer_id(id, full_name, phone)')
-    .eq('nfc_card_id', nfcCardId.trim())
+    .select('*, packages(*)')
+    .eq('customer_id', resolved.customer.id)
     .order('start_date', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
-  if (!subscription) return { error: 'invalid_nfc' as const }
+  if (!subscription) return { error: 'no_subscription' as const }
 
   const today = getMuscatDate()
   const daysLeft = subscription.duration_days - Math.floor(
@@ -124,7 +154,7 @@ export async function nfcRedeem(nfcCardId: string) {
     return { error: 'limit_reached' as const }
   }
 
-  const profile = subscription.profiles as { id: string; full_name: string; phone: string }
+  const profile = resolved.customer
   const { error } = await supabase
     .from('redemptions')
     .insert({ subscription_id: subscription.id, customer_id: profile.id, day: today })

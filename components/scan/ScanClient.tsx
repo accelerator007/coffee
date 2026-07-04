@@ -49,7 +49,11 @@ export default function ScanClient({ lang }: { lang: Lang }) {
     try {
       const result = await nfcRedeem(value.trim())
       if ('error' in result) {
-        if (result.error === 'invalid_nfc') setErrorMsg(ar ? 'بطاقة NFC غير مرتبطة بأي عميل' : 'NFC card not linked to any customer')
+        if (result.error === 'invalid_nfc') setErrorMsg(ar ? 'البطاقة غير مسجلة في النظام' : 'Card is not registered')
+        else if (result.error === 'card_blocked') setErrorMsg(ar ? 'البطاقة محظورة' : 'Card is blocked')
+        else if (result.error === 'card_lost') setErrorMsg(ar ? 'البطاقة مبلّغ عنها كمفقودة' : 'Card reported lost')
+        else if (result.error === 'card_unassigned') setErrorMsg(ar ? 'البطاقة غير مرتبطة بعميل' : 'Card not linked to a customer')
+        else if (result.error === 'no_subscription') setErrorMsg(ar ? 'لا يوجد اشتراك لهذا العميل' : 'Customer has no subscription')
         else if (result.error === 'expired') setErrorMsg(ar ? 'الاشتراك منتهي' : 'Subscription expired')
         else if (result.error === 'limit_reached') setErrorMsg(ar ? 'وصلت للحد اليومي' : 'Daily limit reached')
         else setErrorMsg(ar ? 'حدث خطأ، حاول مجدداً' : 'Something went wrong, try again')
