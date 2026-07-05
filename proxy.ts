@@ -20,17 +20,21 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // getClaims verifies the JWT locally (cached JWKS) on asymmetric-key
+  // projects — no auth-server round trip per navigation, unlike getUser.
+  // Expired tokens still refresh through the session and land in setAll.
+  const { data } = await supabase.auth.getClaims()
+  const claims = data?.claims
 
   const path = request.nextUrl.pathname
 
   // Role is set in the auth user's metadata at creation (and kept in sync on
   // update), so it rides inside the validated JWT — no profiles query needed.
-  const role = user?.user_metadata?.role as string | undefined
+  const role = (claims?.user_metadata as { role?: string } | undefined)?.role
 
   // Public routes
   if (path === '/login' || path === '/') {
-    if (user) {
+    if (claims) {
       if (role === 'customer') return NextResponse.redirect(new URL('/dashboard', request.url))
       if (role === 'employee') return NextResponse.redirect(new URL('/scan', request.url))
       if (role === 'admin') return NextResponse.redirect(new URL('/admin', request.url))
@@ -39,7 +43,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Protected routes — redirect to login if not authenticated
-  if (!user) {
+  if (!claims) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 

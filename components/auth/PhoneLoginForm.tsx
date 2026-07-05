@@ -10,7 +10,6 @@ import Input from '@/components/ui/Input'
 
 export default function PhoneLoginForm({ lang }: { lang: Lang }) {
   const router = useRouter()
-  const supabase = createClient()
 
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
@@ -18,6 +17,9 @@ export default function PhoneLoginForm({ lang }: { lang: Lang }) {
   const [error, setError] = useState('')
 
   async function handleLogin() {
+    // Created on submit, not on render, so the login page can prerender
+    // statically without Supabase env vars at build time.
+    const supabase = createClient()
     setError('')
     setLoading(true)
     const fullPhone = phone.startsWith('+') ? phone : `+968${phone.replace(/^0/, '')}`

@@ -3,11 +3,12 @@ import { Playfair_Display, Amiri, Inter, Almarai } from 'next/font/google'
 import './globals.css'
 
 // Display / headings / numbers — elegant serif (Latin + Arabic).
+// No weight list: Playfair is a variable font, so this ships one file
+// covering 400–900 instead of six static instances.
 const playfair = Playfair_Display({
   subsets: ['latin'],
   variable: '--font-playfair',
   display: 'swap',
-  weight: ['400', '500', '600', '700', '800', '900'],
 })
 
 const amiri = Amiri({

@@ -9,7 +9,6 @@ import Input from '@/components/ui/Input'
 
 export default function StaffLoginForm({ lang }: { lang: Lang }) {
   const router = useRouter()
-  const supabase = createClient()
 
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
@@ -17,6 +16,9 @@ export default function StaffLoginForm({ lang }: { lang: Lang }) {
   const [error, setError] = useState('')
 
   async function handleLogin() {
+    // Created on submit, not on render, so the login page can prerender
+    // statically without Supabase env vars at build time.
+    const supabase = createClient()
     setError('')
     setLoading(true)
 
