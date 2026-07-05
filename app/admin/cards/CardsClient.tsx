@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Pencil, Nfc } from 'lucide-react'
+import { Search, Pencil, Nfc, Sparkles } from 'lucide-react'
 import { Lang, t } from '@/lib/i18n'
 import {
   createCard, updateCard, assignCard, unassignCard, setCardStatus, deleteCard,
-  type CardRow, type CardStatus,
+  generateCardUid, type CardRow, type CardStatus,
 } from './actions'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
@@ -37,6 +37,7 @@ export default function CardsClient({ lang, cards, customers }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState({ card_uid: '', label: '', customer_id: '' })
   const [saving, setSaving] = useState(false)
+  const [generating, setGenerating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState('')
@@ -133,6 +134,19 @@ export default function CardsClient({ lang, cards, customers }: Props) {
     router.refresh()
   }
 
+  async function handleGenerate() {
+    setError('')
+    setGenerating(true)
+    const result = await generateCardUid()
+    setGenerating(false)
+    const uid = 'uid' in result ? result.uid : undefined
+    if (uid) {
+      setForm(f => ({ ...f, card_uid: uid }))
+    } else {
+      setError(t('error', lang))
+    }
+  }
+
   async function handleStatus(id: string, status: Exclude<CardStatus, 'unassigned'>) {
     setError('')
     const result = await setCardStatus(id, status)
@@ -177,12 +191,29 @@ export default function CardsClient({ lang, cards, customers }: Props) {
             <input
               value={form.card_uid}
               onChange={e => setForm({ ...form, card_uid: e.target.value })}
-              placeholder={ar ? 'مرّر البطاقة أو اكتب الرقم' : 'Tap card or type number'}
+              placeholder={ar ? 'ولّد رقماً أو امسح البطاقة أو اكتبه' : 'Generate, tap card, or type'}
               className={`${inputClass} font-mono`}
               dir="ltr"
             />
+            <Button
+              type="button"
+              variant="soft"
+              onClick={handleGenerate}
+              loading={generating}
+              className="min-h-11 px-4 shrink-0"
+              aria-label={t('generateId', lang)}
+              title={t('generateId', lang)}
+            >
+              <Sparkles size={18} strokeWidth={1.75} aria-hidden />
+              {t('generateId', lang)}
+            </Button>
             <NFCReadButton lang={lang} onRead={uid => setForm(f => ({ ...f, card_uid: uid }))} />
           </div>
+          <p className="text-xs text-text-muted">
+            {ar
+              ? 'زر التوليد يعطي رقماً عشوائياً آمناً غير مستخدم — اكتبه على البطاقة'
+              : 'Generate gives a secure random unused number — write it on the card'}
+          </p>
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium">

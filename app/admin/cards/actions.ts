@@ -1,5 +1,6 @@
 'use server'
 
+import { randomInt } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 
 export type CardStatus = 'active' | 'unassigned' | 'lost' | 'blocked'
@@ -15,6 +16,35 @@ export type CardRow = {
 }
 
 const DUPLICATE_UID = '23505'
+
+// Card-UID generator alphabet: no 0/O, 1/I/L or U/V lookalikes, so a printed
+// or handwritten UID can always be typed back unambiguously at the till.
+const UID_ALPHABET = 'ABCDEFGHJKMNPQRSTWXYZ23456789'
+
+/**
+ * Generate a fresh card UID like `D7-K3TF-9WQA`. Cryptographically random
+ * (not sequential), so one card's number reveals nothing about the others,
+ * and verified unused against the cards table before being handed out. The
+ * unique index on card_uid remains the final guard at insert time.
+ */
+export async function generateCardUid() {
+  const supabase = await createClient()
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    let raw = ''
+    for (let i = 0; i < 8; i++) raw += UID_ALPHABET[randomInt(UID_ALPHABET.length)]
+    const uid = `D7-${raw.slice(0, 4)}-${raw.slice(4)}`
+
+    const { data: existing } = await supabase
+      .from('cards')
+      .select('id')
+      .eq('card_uid', uid)
+      .maybeSingle()
+
+    if (!existing) return { uid }
+  }
+  return { error: 'gen_failed' as const }
+}
 
 export async function listCards(): Promise<CardRow[]> {
   const supabase = await createClient()

@@ -107,6 +107,7 @@ const translations = {
   blocked: { ar: 'محظورة', en: 'Blocked' },
   activateCard: { ar: 'تفعيل', en: 'Activate' },
   cardExists: { ar: 'رقم البطاقة مستخدم مسبقاً', en: 'Card number already exists' },
+  generateId: { ar: 'توليد', en: 'Generate' },
   noCards: { ar: 'لا توجد بطاقات بعد', en: 'No cards yet' },
   searchCards: { ar: 'ابحث برقم البطاقة أو اسم العميل', en: 'Search by card or customer' },
   // Common
