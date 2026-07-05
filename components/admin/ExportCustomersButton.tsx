@@ -5,16 +5,10 @@ import { Download } from 'lucide-react'
 import { Lang, t } from '@/lib/i18n'
 import { exportCustomersReport } from '@/app/admin/actions'
 
-// Quote a CSV field when it contains a delimiter, quote, or newline.
-function csvField(value: string | number | null): string {
-  const s = value == null ? '' : String(value)
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-}
-
 /**
- * Downloads the customer report as a CSV that opens directly in Excel:
- * UTF-8 BOM keeps Arabic intact, and the `sep=,` hint keeps columns split
- * correctly regardless of the machine's regional list separator.
+ * Downloads the customer report as a real .xlsx workbook (exceljs, loaded
+ * on demand) — native Excel format, so Arabic text, column splitting, and
+ * RTL need no encoding tricks.
  */
 export default function ExportCustomersButton({ lang }: { lang: Lang }) {
   const [loading, setLoading] = useState(false)
@@ -23,11 +17,10 @@ export default function ExportCustomersButton({ lang }: { lang: Lang }) {
   async function handleExport() {
     setLoading(true)
     try {
-      const rows = await exportCustomersReport()
-
-      const headers = ar
-        ? ['الاسم', 'الهاتف', 'الباقة', 'الفئة', 'تاريخ بداية الاشتراك', 'الأيام المتبقية', 'الحالة', 'الأكواب المستخدمة', 'إجمالي الأكواب', 'نسبة الاستهلاك %']
-        : ['Name', 'Phone', 'Package', 'Tier', 'Start Date', 'Days Left', 'Status', 'Used Cups', 'Total Cups', 'Consumption %']
+      const [rows, { Workbook }] = await Promise.all([
+        exportCustomersReport(),
+        import('exceljs'),
+      ])
 
       const tierLabel = (tier: string | null) => {
         if (tier === 'gold') return ar ? 'ذهبية' : 'Gold'
@@ -41,27 +34,52 @@ export default function ExportCustomersButton({ lang }: { lang: Lang }) {
         return ar ? 'بدون اشتراك' : 'No subscription'
       }
 
-      const lines = rows.map(r => [
-        csvField(r.full_name),
-        csvField(r.phone),
-        csvField(r.package_name ?? (ar ? 'بدون باقة' : 'No package')),
-        csvField(tierLabel(r.tier)),
-        csvField(r.start_date),
-        csvField(r.days_left),
-        csvField(statusLabel(r.status)),
-        csvField(r.used_cups),
-        csvField(r.total_cups),
-        csvField(r.consumption_pct),
-      ].join(','))
+      const workbook = new Workbook()
+      const sheet = workbook.addWorksheet(ar ? 'العملاء' : 'Customers', {
+        views: [{ rightToLeft: ar }],
+      })
 
-      const csv = '\uFEFF' + 'sep=,\n' + headers.map(csvField).join(',') + '\n' + lines.join('\n')
+      sheet.columns = [
+        { header: ar ? 'الاسم' : 'Name', key: 'name', width: 24 },
+        { header: ar ? 'الهاتف' : 'Phone', key: 'phone', width: 16 },
+        { header: ar ? 'الباقة' : 'Package', key: 'pkg', width: 18 },
+        { header: ar ? 'الفئة' : 'Tier', key: 'tier', width: 10 },
+        { header: ar ? 'تاريخ بداية الاشتراك' : 'Start Date', key: 'start', width: 18 },
+        { header: ar ? 'الأيام المتبقية' : 'Days Left', key: 'days', width: 13 },
+        { header: ar ? 'الحالة' : 'Status', key: 'status', width: 13 },
+        { header: ar ? 'الأكواب المستخدمة' : 'Used Cups', key: 'used', width: 15 },
+        { header: ar ? 'إجمالي الأكواب' : 'Total Cups', key: 'total', width: 13 },
+        { header: ar ? 'نسبة الاستهلاك %' : 'Consumption %', key: 'pct', width: 15 },
+      ]
 
+      for (const r of rows) {
+        sheet.addRow({
+          name: r.full_name,
+          phone: r.phone ?? '',
+          pkg: r.package_name ?? (ar ? 'بدون باقة' : 'No package'),
+          tier: tierLabel(r.tier),
+          start: r.start_date ?? '',
+          days: r.days_left ?? '',
+          status: statusLabel(r.status),
+          used: r.used_cups ?? '',
+          total: r.total_cups ?? '',
+          pct: r.consumption_pct ?? '',
+        })
+      }
+
+      const headerRow = sheet.getRow(1)
+      headerRow.font = { bold: true }
+      headerRow.alignment = { horizontal: 'center' }
+
+      const buffer = await workbook.xlsx.writeBuffer()
       const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Muscat' })
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `district7-customers-${today}.csv`
+      a.download = `district7-customers-${today}.xlsx`
       document.body.appendChild(a)
       a.click()
       a.remove()
