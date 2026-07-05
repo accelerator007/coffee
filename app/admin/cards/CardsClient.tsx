@@ -12,8 +12,7 @@ import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import ListRow from '@/components/ui/ListRow'
-import NFCReadButton from '@/components/admin/NFCReadButton'
-import NFCWriteButton from '@/components/admin/NFCWriteButton'
+import NFCCardActions from '@/components/admin/NFCCardActions'
 
 type Customer = { id: string; full_name: string; phone: string }
 
@@ -208,13 +207,16 @@ export default function CardsClient({ lang, cards, customers }: Props) {
               <Sparkles size={18} strokeWidth={1.75} aria-hidden />
               {t('generateId', lang)}
             </Button>
-            <NFCWriteButton lang={lang} uid={form.card_uid} />
-            <NFCReadButton lang={lang} onRead={uid => setForm(f => ({ ...f, card_uid: uid }))} />
           </div>
+          <NFCCardActions
+            lang={lang}
+            uid={form.card_uid}
+            onRead={uid => setForm(f => ({ ...f, card_uid: uid }))}
+          />
           <p className="text-xs text-text-muted">
             {ar
-              ? 'بطاقة جديدة: ولّد رقماً ثم اضغط «كتابة على البطاقة» لبرمجة الشريحة. بطاقة قديمة فيها رقم: اضغط «قراءة البطاقة»'
-              : 'New card: generate a number, then tap "Write to card" to program the tag. Old card with a code: tap "Read card"'}
+              ? 'ولّد رقماً ثم «كتابة» لبرمجته على البطاقة، أو «قراءة» لسحب الرقم من بطاقة موجودة، أو «حذف» لمسح محتوى البطاقة. (عمليات NFC تعمل على جوال أندرويد بمتصفح Chrome)'
+              : 'Generate a number then tap "Write" to program the card, "Read" to pull a code off an existing card, or "Erase" to wipe it. (NFC works on Android Chrome.)'}
           </p>
         </div>
         <div className="flex flex-col gap-1.5">
