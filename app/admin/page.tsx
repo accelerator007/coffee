@@ -8,6 +8,7 @@ import { Lang, t, brand } from '@/lib/i18n'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import KPICard from '@/components/admin/KPICard'
+import ExportCustomersButton from '@/components/admin/ExportCustomersButton'
 import PackageTable from '@/components/admin/PackageTable'
 import RedemptionChart from '@/components/admin/RedemptionChart'
 import AdminPageClient from './AdminPageClient'
@@ -67,6 +68,7 @@ export default async function AdminPage() {
             <Link href="/admin/cards" className={`${navLink} text-foreground bg-muted hover:bg-border`}>
               {t('cards', lang)}
             </Link>
+            <ExportCustomersButton lang={lang} />
             <Link href="/admin/customers" className={`${navLink} text-background bg-brand hover:bg-brand-dark`}>
               {t('customers', lang)} ←
             </Link>
