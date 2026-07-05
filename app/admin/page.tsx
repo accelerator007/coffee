@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
-import { Users, CircleCheck, Coffee, Wallet } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Lang, t, brand } from '@/lib/i18n'
 import Card from '@/components/ui/Card'
@@ -77,10 +76,10 @@ export default async function AdminPage() {
         {/* KPI Grid */}
         {kpis && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <KPICard label={t('totalCustomers', lang)} value={kpis.total_subscribers} icon={Users} />
-            <KPICard label={t('activePlans', lang)} value={kpis.active_subscribers} icon={CircleCheck} />
-            <KPICard label={t('totalRedemptions', lang)} value={kpis.total_redemptions} icon={Coffee} />
-            <KPICard label={t('revenue', lang)} value={kpis.total_revenue} icon={Wallet} prefix="OMR " decimals={3} />
+            <KPICard label={t('totalCustomers', lang)} value={kpis.total_subscribers} icon="users" />
+            <KPICard label={t('activePlans', lang)} value={kpis.active_subscribers} icon="check" />
+            <KPICard label={t('totalRedemptions', lang)} value={kpis.total_redemptions} icon="coffee" />
+            <KPICard label={t('revenue', lang)} value={kpis.total_revenue} icon="wallet" prefix="OMR " decimals={3} />
           </div>
         )}
 

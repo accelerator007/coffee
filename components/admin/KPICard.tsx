@@ -1,12 +1,24 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import { Users, CircleCheck, Coffee, Wallet, type LucideIcon } from 'lucide-react'
+
+// The icon is chosen by a string key rather than a component reference, because
+// a Server Component (the admin dashboard) cannot pass a function/component
+// across the server→client boundary — it must hand over a serializable value.
+const icons = {
+  users: Users,
+  check: CircleCheck,
+  coffee: Coffee,
+  wallet: Wallet,
+} satisfies Record<string, LucideIcon>
+
+export type KPIIcon = keyof typeof icons
 
 interface Props {
   label: string
   value: number
-  icon: LucideIcon
+  icon: KPIIcon
   prefix?: string
   suffix?: string
   decimals?: number
@@ -38,7 +50,8 @@ function useCountUp(target: number, duration = 1100) {
   return n
 }
 
-export default function KPICard({ label, value, icon: IconComp, prefix = '', suffix = '', decimals = 0, delta = null }: Props) {
+export default function KPICard({ label, value, icon, prefix = '', suffix = '', decimals = 0, delta = null }: Props) {
+  const IconComp = icons[icon]
   const n = useCountUp(Number(value) || 0)
   const formatted = n.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
 
