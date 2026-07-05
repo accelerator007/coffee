@@ -42,6 +42,7 @@ export default function ExportCustomersButton({ lang }: { lang: Lang }) {
       sheet.columns = [
         { header: ar ? 'الاسم' : 'Name', key: 'name', width: 24 },
         { header: ar ? 'الهاتف' : 'Phone', key: 'phone', width: 16 },
+        { header: ar ? 'رقم البطاقة' : 'Card Number', key: 'card', width: 18 },
         { header: ar ? 'الباقة' : 'Package', key: 'pkg', width: 18 },
         { header: ar ? 'الفئة' : 'Tier', key: 'tier', width: 10 },
         { header: ar ? 'تاريخ بداية الاشتراك' : 'Start Date', key: 'start', width: 18 },
@@ -56,6 +57,7 @@ export default function ExportCustomersButton({ lang }: { lang: Lang }) {
         sheet.addRow({
           name: r.full_name,
           phone: r.phone ?? '',
+          card: r.card_uid || '-',
           pkg: r.package_name ?? (ar ? 'بدون باقة' : 'No package'),
           tier: tierLabel(r.tier),
           start: r.start_date ?? '',

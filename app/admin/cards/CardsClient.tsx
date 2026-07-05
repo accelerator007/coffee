@@ -13,6 +13,7 @@ import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import ListRow from '@/components/ui/ListRow'
 import NFCReadButton from '@/components/admin/NFCReadButton'
+import NFCWriteButton from '@/components/admin/NFCWriteButton'
 
 type Customer = { id: string; full_name: string; phone: string }
 
@@ -187,12 +188,12 @@ export default function CardsClient({ lang, cards, customers }: Props) {
         )}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium">{t('cardNumber', lang)}</label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               value={form.card_uid}
               onChange={e => setForm({ ...form, card_uid: e.target.value })}
-              placeholder={ar ? 'ولّد رقماً أو امسح البطاقة أو اكتبه' : 'Generate, tap card, or type'}
-              className={`${inputClass} font-mono`}
+              placeholder={ar ? 'ولّد رقماً أو اقرأ البطاقة أو اكتبه' : 'Generate, read card, or type'}
+              className={`${inputClass} font-mono flex-1 min-w-[10rem]`}
               dir="ltr"
             />
             <Button
@@ -207,12 +208,13 @@ export default function CardsClient({ lang, cards, customers }: Props) {
               <Sparkles size={18} strokeWidth={1.75} aria-hidden />
               {t('generateId', lang)}
             </Button>
+            <NFCWriteButton lang={lang} uid={form.card_uid} />
             <NFCReadButton lang={lang} onRead={uid => setForm(f => ({ ...f, card_uid: uid }))} />
           </div>
           <p className="text-xs text-text-muted">
             {ar
-              ? 'زر التوليد يعطي رقماً عشوائياً آمناً غير مستخدم — اكتبه على البطاقة'
-              : 'Generate gives a secure random unused number — write it on the card'}
+              ? 'بطاقة جديدة: ولّد رقماً ثم اضغط «كتابة على البطاقة» لبرمجة الشريحة. بطاقة قديمة فيها رقم: اضغط «قراءة البطاقة»'
+              : 'New card: generate a number, then tap "Write to card" to program the tag. Old card with a code: tap "Read card"'}
           </p>
         </div>
         <div className="flex flex-col gap-1.5">

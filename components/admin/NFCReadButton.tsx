@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Nfc } from 'lucide-react'
-import { Lang } from '@/lib/i18n'
+import { Lang, t } from '@/lib/i18n'
 import Button from '@/components/ui/Button'
 import { decodeCardUid } from '@/components/scan/NFCScanner'
 
@@ -65,11 +65,11 @@ export default function NFCReadButton({ onRead, lang }: Props) {
       variant="soft"
       onClick={startScan}
       className="min-h-11 px-4 shrink-0"
-      aria-label={ar ? 'امسح البطاقة' : 'Scan card'}
-      title={ar ? 'امسح البطاقة' : 'Scan card'}
+      aria-label={t('readCard', lang)}
+      title={t('readCard', lang)}
     >
       <Nfc size={18} strokeWidth={1.75} className={reading ? 'animate-pulse' : ''} aria-hidden />
-      {reading ? (ar ? 'قرّب البطاقة...' : 'Hold card...') : (ar ? 'مسح' : 'Scan')}
+      {reading ? (ar ? 'قرّب البطاقة...' : 'Hold card...') : t('readCard', lang)}
     </Button>
   )
 }

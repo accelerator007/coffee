@@ -17,6 +17,7 @@ export type CustomerReportRow = {
   used_cups: number | null
   total_cups: number | null
   consumption_pct: number | null
+  card_uid: string | null
 }
 
 type SubRow = {
@@ -37,7 +38,7 @@ type SubRow = {
 export async function exportCustomersReport(): Promise<CustomerReportRow[]> {
   const supabase = await createClient()
 
-  const [profilesRes, subsRes, redsRes] = await Promise.all([
+  const [profilesRes, subsRes, redsRes, cardsRes] = await Promise.all([
     supabase
       .from('profiles')
       .select('id, full_name, phone')
@@ -49,11 +50,27 @@ export async function exportCustomersReport(): Promise<CustomerReportRow[]> {
     supabase
       .from('redemptions')
       .select('subscription_id'),
+    supabase
+      .from('cards')
+      .select('card_uid, customer_id')
+      .not('customer_id', 'is', null),
   ])
 
   const profiles = profilesRes.data ?? []
   const subs = (subsRes.data ?? []) as unknown as SubRow[]
   const reds = redsRes.data ?? []
+  const cards = (cardsRes.data ?? []) as { card_uid: string; customer_id: string }[]
+
+  // A customer may hold more than one card; list them all so the export shows
+  // every UID linked to that person (blank/no-card customers get "-" in the UI).
+  const cardsByCustomer = new Map<string, string[]>()
+  for (const c of cards) {
+    const list = cardsByCustomer.get(c.customer_id) ?? []
+    list.push(c.card_uid)
+    cardsByCustomer.set(c.customer_id, list)
+  }
+  const cardUidFor = (customerId: string) =>
+    cardsByCustomer.get(customerId)?.join('، ') ?? null
 
   // Redemption count per subscription.
   const usedBySub = new Map<string, number>()
@@ -91,6 +108,7 @@ export async function exportCustomersReport(): Promise<CustomerReportRow[]> {
         used_cups: null,
         total_cups: null,
         consumption_pct: null,
+        card_uid: cardUidFor(p.id),
       }
     }
 
@@ -112,6 +130,7 @@ export async function exportCustomersReport(): Promise<CustomerReportRow[]> {
       used_cups: usedCups,
       total_cups: totalCups,
       consumption_pct: consumptionPct,
+      card_uid: cardUidFor(p.id),
     }
   })
 }
