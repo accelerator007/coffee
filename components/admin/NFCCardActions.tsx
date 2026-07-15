@@ -13,19 +13,8 @@ interface Props {
 }
 
 type Action = 'read' | 'write' | 'erase'
-type Message = { key: TranslationKey; kind: 'info' | 'success' | 'error' } | null
+type Message = { text: string; kind: 'info' | 'success' | 'error' } | null
 
-/**
- * The three physical-tag operations for a card, done over Web NFC:
- *   - Read:  scan an existing tag and pull its code into the field.
- *   - Write: program the current code onto the tag (a text record, so a later
- *            read/till-scan decodes back the same value via decodeCardUid).
- *   - Erase: wipe the tag by writing a single empty NDEF record.
- *
- * Web NFC only works on Android Chrome over HTTPS. Unlike a self-hiding button,
- * the three actions are always shown so the operator sees them everywhere; on an
- * unsupported device a tap just explains that a phone is needed.
- */
 export default function NFCCardActions({ uid, lang, onRead }: Props) {
   const [busy, setBusy] = useState<Action | null>(null)
   const [message, setMessage] = useState<Message>(null)
@@ -33,27 +22,57 @@ export default function NFCCardActions({ uid, lang, onRead }: Props) {
 
   useEffect(() => () => abortRef.current?.abort(), [])
 
+  function translated(key: TranslationKey) {
+    return t(key, lang)
+  }
+
   function supported() {
-    return typeof window !== 'undefined' && 'NDEFReader' in window
+    return typeof window !== 'undefined' && window.isSecureContext && 'NDEFReader' in window
+  }
+
+  function describeError(error: unknown) {
+    if (error instanceof DOMException) {
+      if (error.name === 'AbortError') return null
+      if (error.name === 'NotAllowedError') {
+        return lang === 'ar' ? 'تم رفض إذن NFC. اسمح بالوصول ثم حاول مجدداً.' : 'NFC permission was denied. Allow access and try again.'
+      }
+      if (error.name === 'NotSupportedError') {
+        return lang === 'ar' ? 'هذه البطاقة أو العملية غير مدعومة.' : 'This card or operation is not supported.'
+      }
+      if (error.name === 'NetworkError') {
+        return lang === 'ar' ? 'تعذر الاتصال بالبطاقة. قرّبها وثبّتها ثم حاول مجدداً.' : 'Could not communicate with the card. Hold it steady and try again.'
+      }
+    }
+    return translated('nfcFailed')
   }
 
   async function run(action: Action) {
-    // Tapping the in-progress action again cancels it.
     if (busy === action) {
       abortRef.current?.abort()
       setBusy(null)
       setMessage(null)
       return
     }
+
     setMessage(null)
 
     if (!supported()) {
-      setMessage({ key: 'nfcUnsupported', kind: 'info' })
+      setMessage({ text: translated('nfcUnsupported'), kind: 'info' })
       return
     }
+
     if (action === 'write' && !uid.trim()) {
-      setMessage({ key: 'nfcNeedNumber', kind: 'error' })
+      setMessage({ text: translated('nfcNeedNumber'), kind: 'error' })
       return
+    }
+
+    if (action === 'erase') {
+      const confirmed = window.confirm(
+        lang === 'ar'
+          ? 'سيتم مسح محتوى بطاقة NFC نهائياً. هل أنت متأكد؟'
+          : 'This will permanently erase the NFC card contents. Continue?',
+      )
+      if (!confirmed) return
     }
 
     abortRef.current?.abort()
@@ -73,17 +92,17 @@ export default function NFCCardActions({ uid, lang, onRead }: Props) {
           setBusy(null)
           if (value) {
             onRead(value)
-            setMessage({ key: 'nfcReadDone', kind: 'success' })
+            setMessage({ text: translated('nfcReadDone'), kind: 'success' })
           } else {
-            setMessage({ key: 'nfcEmptyCard', kind: 'error' })
+            setMessage({ text: translated('nfcEmptyCard'), kind: 'error' })
           }
         }
         await ndef.scan({ signal: controller.signal })
-        setMessage({ key: 'nfcHoldRead', kind: 'info' })
+        setMessage({ text: translated('nfcHoldRead'), kind: 'info' })
         return
       }
 
-      setMessage({ key: action === 'write' ? 'nfcHoldWrite' : 'nfcHoldErase', kind: 'info' })
+      setMessage({ text: translated(action === 'write' ? 'nfcHoldWrite' : 'nfcHoldErase'), kind: 'info' })
       await ndef.write(
         action === 'write'
           ? { records: [{ recordType: 'text', data: uid.trim() }] }
@@ -91,10 +110,11 @@ export default function NFCCardActions({ uid, lang, onRead }: Props) {
         { signal: controller.signal },
       )
       setBusy(null)
-      setMessage({ key: action === 'write' ? 'nfcWriteDone' : 'nfcEraseDone', kind: 'success' })
-    } catch {
+      setMessage({ text: translated(action === 'write' ? 'nfcWriteDone' : 'nfcEraseDone'), kind: 'success' })
+    } catch (error) {
       setBusy(null)
-      setMessage({ key: 'nfcFailed', kind: 'error' })
+      const text = describeError(error)
+      if (text) setMessage({ text, kind: 'error' })
     }
   }
 
@@ -103,44 +123,25 @@ export default function NFCCardActions({ uid, lang, onRead }: Props) {
     : message?.kind === 'success' ? 'text-brand'
     : 'text-text-muted'
 
-  // A different action running locks the other two; the active one stays
-  // clickable so it can be cancelled.
   const locked = (action: Action) => busy !== null && busy !== action
 
   return (
-    <div className="flex flex-col gap-2" aria-label={t('nfcActions', lang)}>
+    <div className="flex flex-col gap-2" aria-label={translated('nfcActions')}>
       <div className="flex flex-wrap gap-2">
-        <Button
-          type="button" variant="soft"
-          onClick={() => run('read')}
-          disabled={locked('read')}
-          className="min-h-11 px-4 flex-1 min-w-[6rem]"
-        >
+        <Button type="button" variant="soft" onClick={() => run('read')} disabled={locked('read')} className="min-h-11 px-4 flex-1 min-w-[6rem]">
           <ScanLine size={18} strokeWidth={1.75} className={busy === 'read' ? 'animate-pulse' : ''} aria-hidden />
-          {t('readCard', lang)}
+          {translated('readCard')}
         </Button>
-        <Button
-          type="button" variant="soft"
-          onClick={() => run('write')}
-          disabled={!uid.trim() || locked('write')}
-          className="min-h-11 px-4 flex-1 min-w-[6rem]"
-        >
+        <Button type="button" variant="soft" onClick={() => run('write')} disabled={!uid.trim() || locked('write')} className="min-h-11 px-4 flex-1 min-w-[6rem]">
           <PencilLine size={18} strokeWidth={1.75} className={busy === 'write' ? 'animate-pulse' : ''} aria-hidden />
-          {t('writeCard', lang)}
+          {translated('writeCard')}
         </Button>
-        <Button
-          type="button" variant="soft"
-          onClick={() => run('erase')}
-          disabled={locked('erase')}
-          className="min-h-11 px-4 flex-1 min-w-[6rem] text-danger"
-        >
+        <Button type="button" variant="soft" onClick={() => run('erase')} disabled={locked('erase')} className="min-h-11 px-4 flex-1 min-w-[6rem] text-danger">
           <Eraser size={18} strokeWidth={1.75} className={busy === 'erase' ? 'animate-pulse' : ''} aria-hidden />
-          {t('eraseCard', lang)}
+          {translated('eraseCard')}
         </Button>
       </div>
-      {message && (
-        <p role="status" className={`text-xs ${msgColor}`}>{t(message.key, lang)}</p>
-      )}
+      {message && <p role="status" aria-live="polite" className={`text-xs ${msgColor}`}>{message.text}</p>}
     </div>
   )
 }
