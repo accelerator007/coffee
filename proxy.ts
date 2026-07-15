@@ -35,15 +35,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // app_metadata is controlled by trusted server-side code. Never authorize
-  // from user_metadata, because users can update that field themselves.
+  // The profiles table is the canonical source of truth because the database
+  // RLS helpers use the same value. A user may read only their own profile row.
   let role: AppRole | null = null
-  const metadataRole = (claims.app_metadata as { role?: unknown } | undefined)?.role
-  if (isRole(metadataRole)) role = metadataRole
-
-  // Backwards-compatible fallback for existing accounts that predate the move
-  // to app_metadata. RLS must allow a signed-in user to read their own profile.
-  if (!role && typeof claims.sub === 'string') {
+  if (typeof claims.sub === 'string') {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -53,7 +48,13 @@ export async function proxy(request: NextRequest) {
     if (isRole(profile?.role)) role = profile.role
   }
 
-  // A signed-in account without a trusted role is treated as unauthorized.
+  // Trusted server-managed metadata is a fallback for accounts whose profile
+  // row has not been created yet. Never authorize from user_metadata.
+  if (!role) {
+    const metadataRole = (claims.app_metadata as { role?: unknown } | undefined)?.role
+    if (isRole(metadataRole)) role = metadataRole
+  }
+
   if (!role) {
     await supabase.auth.signOut()
     const response = NextResponse.redirect(new URL('/login?error=unauthorized', request.url))
