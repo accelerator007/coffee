@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Coffee / District 7
 
-## Getting Started
+نظام اشتراكات مقهى مبني بـ Next.js وSupabase، ويدعم العملاء والموظفين والأدمن، ومسح QR وNFC، وإدارة الباقات والبطاقات والتقارير.
 
-First, run the development server:
+## المتطلبات
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 20 أو أحدث
+- مشروع Supabase
+- متغيرات البيئة التالية:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+لا تستخدم `SUPABASE_SERVICE_ROLE_KEY` داخل Client Components أو أي متغير يبدأ بـ`NEXT_PUBLIC_`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## التشغيل المحلي
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm ci
+npm run dev
+```
 
-## Learn More
+ثم افتح `http://localhost:3000`.
 
-To learn more about Next.js, take a look at the following resources:
+## التحقق قبل النشر
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run check
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+يشغّل فحص TypeScript وESLint ثم يبني نسخة الإنتاج.
 
-## Deploy on Vercel
+## قاعدة البيانات
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+للمشروع الجديد شغّل:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```text
+supabase/migrations/full_schema.sql
+```
+
+وللمشروع الحالي شغّل migrations بالترتيب وتأكد أن آخر migration مطبق قبل نشر نسخة جديدة. اختلاف نسخة قاعدة البيانات عن الكود قد يؤدي إلى أخطاء 500 أو حقول ناقصة.
+
+## الصلاحيات
+
+الأدوار المدعومة:
+
+- `customer`
+- `employee`
+- `admin`
+
+القرار الأمني يعتمد على `app_metadata.role` لأنه لا يمكن للمستخدم تعديله من المتصفح. للحسابات القديمة يوجد رجوع مؤقت إلى `profiles.role` بشرط وجود RLS يسمح للمستخدم بقراءة صفه فقط.
+
+عند إنشاء أو تعديل مستخدم من كود موثوق استخدم Admin API لتحديث الدور:
+
+```ts
+await admin.auth.admin.updateUserById(userId, {
+  app_metadata: { role: 'employee' },
+})
+```
+
+لا تعتمد على `user_metadata.role` في أي تحقق أمني.
+
+كل Server Action إدارية يجب أن تتحقق من جلسة المستخدم ودوره داخل السيرفر حتى لو كانت الصفحة محمية بالـproxy. كما يجب أن تكون سياسات RLS هي خط الدفاع النهائي.
+
+## تسجيل الدخول بالهاتف
+
+تُقبل أرقام عمان بصيغ مثل:
+
+```text
+91234567
+9123 4567
++96891234567
+```
+
+ويتم تنظيف الرقم وتحويله داخلياً إلى `+968XXXXXXXX`.
+
+## NFC
+
+Web NFC يعمل على Android Chrome عبر HTTPS فقط. عمليات القراءة والكتابة والمسح تعرض أخطاء أوضح، ومسح البطاقة يتطلب تأكيداً قبل التنفيذ.
+
+## النشر على Netlify
+
+1. أضف متغيرات البيئة في إعدادات الموقع.
+2. استخدم `npm ci` للتثبيت.
+3. استخدم `npm run build` للبناء.
+4. طبّق migrations قبل نشر الكود الذي يعتمد عليها.
+5. اختبر تسجيل الدخول لكل دور وعمليات QR/NFC بعد كل نشر.
+
+## قائمة فحص إنتاجية
+
+- تفعيل RLS لجميع الجداول الحساسة.
+- منع العملاء والموظفين من تنفيذ عمليات الأدمن في قاعدة البيانات.
+- عدم كشف Service Role Key.
+- مراجعة سجلات Supabase وNetlify عند ظهور خطأ 500.
+- أخذ نسخة احتياطية قبل migrations الكبيرة.
