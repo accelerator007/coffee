@@ -7,6 +7,15 @@ function isRole(value: unknown): value is AppRole {
   return value === 'admin' || value === 'employee' || value === 'customer'
 }
 
+function clearSupabaseCookies(request: NextRequest, response: NextResponse) {
+  request.cookies
+    .getAll()
+    .filter(cookie => cookie.name.startsWith('sb-'))
+    .forEach(cookie => {
+      response.cookies.set(cookie.name, '', { path: '/', maxAge: 0 })
+    })
+}
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -55,9 +64,10 @@ export async function proxy(request: NextRequest) {
 
   // A signed-in account without a trusted role is treated as unauthorized.
   if (!role) {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut().catch(() => {})
     const response = NextResponse.redirect(new URL('/login?error=unauthorized', request.url))
     supabaseResponse.cookies.getAll().forEach(cookie => response.cookies.set(cookie))
+    clearSupabaseCookies(request, response)
     return response
   }
 
