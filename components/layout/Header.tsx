@@ -17,8 +17,14 @@ export default function Header({ userName, lang, onLangToggle }: HeaderProps) {
   async function handleLogout() {
     // Only this browser session needs to be cleared. A hard navigation also
     // prevents protected server components from rendering with stale cookies.
-    await supabase.auth.signOut({ scope: 'local' })
-    window.location.replace('/login')
+    try {
+      await Promise.race([
+        supabase.auth.signOut({ scope: 'local' }),
+        new Promise(resolve => window.setTimeout(resolve, 1500)),
+      ])
+    } finally {
+      window.location.replace('/login')
+    }
   }
 
   const iconBtn =
