@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { adminClient } from '@/lib/supabase/admin'
 import { hasCurrentUserRole } from '@/lib/auth/roles'
-import { normalizeOmanPhone } from '@/lib/phone'
+import { normalizeOmanPhone, phoneAuthEmail } from '@/lib/phone'
 
 export async function updateCustomer(
   id: string,
@@ -28,7 +28,7 @@ export async function updateCustomer(
 
   // Keep the auth user (login email + metadata) in sync with the new phone
   const { error: authError } = await adminClient.auth.admin.updateUserById(id, {
-    email: `${phone}@phone.local`,
+    email: phoneAuthEmail(normalized.local),
     app_metadata: { role: 'customer' },
     user_metadata: { full_name, phone, birth_date: data.birth_date || null },
   })

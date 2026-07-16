@@ -19,3 +19,18 @@ export function normalizeOmanPhone(input: string): PhoneResult {
     international: `+968${digits}`,
   }
 }
+
+/**
+ * Supabase Auth stores phone customers as internal email users.
+ * Keep the address RFC/Auth-safe by avoiding a leading "+" in the local part.
+ */
+export function phoneAuthEmail(localOrInternational: string) {
+  const digits = localOrInternational.replace(/\D/g, '')
+  const withCountryCode = digits.startsWith('968') ? digits : `968${digits}`
+  return `${withCountryCode}@phone.local`
+}
+
+/** Legacy format used before the safe internal email format. */
+export function legacyPhoneAuthEmail(international: string) {
+  return `${international}@phone.local`
+}

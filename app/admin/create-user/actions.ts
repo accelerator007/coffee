@@ -2,7 +2,7 @@
 
 import { adminClient } from '@/lib/supabase/admin'
 import { hasCurrentUserRole } from '@/lib/auth/roles'
-import { normalizeOmanPhone } from '@/lib/phone'
+import { normalizeOmanPhone, phoneAuthEmail } from '@/lib/phone'
 
 export async function createCustomer(data: {
   full_name: string
@@ -19,7 +19,7 @@ export async function createCustomer(data: {
     const fullName = data.full_name.trim()
     if (!fullName) return { error: 'الاسم مطلوب' }
     const phone = normalized.international
-    const email = `${phone}@phone.local`
+    const email = phoneAuthEmail(normalized.local)
     const referralCode = data.referral_code?.trim().toUpperCase() || ''
     let referrerId: string | null = null
 

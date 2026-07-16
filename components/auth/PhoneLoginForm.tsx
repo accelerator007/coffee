@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Phone } from 'lucide-react'
 import { Lang, t } from '@/lib/i18n'
-import { normalizeOmanPhone } from '@/lib/phone'
+import { legacyPhoneAuthEmail, normalizeOmanPhone, phoneAuthEmail } from '@/lib/phone'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
@@ -37,13 +37,20 @@ export default function PhoneLoginForm({ lang }: { lang: Lang }) {
 
     try {
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email: `${normalized.international}@phone.local`,
+        email: phoneAuthEmail(normalized.local),
         password,
       })
 
       if (authError) {
-        setError(lang === 'ar' ? 'رقم الهاتف أو كلمة المرور غير صحيحة' : 'Incorrect phone or password')
-        return
+        const { error: legacyAuthError } = await supabase.auth.signInWithPassword({
+          email: legacyPhoneAuthEmail(normalized.international),
+          password,
+        })
+
+        if (legacyAuthError) {
+          setError(lang === 'ar' ? 'رقم الهاتف أو كلمة المرور غير صحيحة' : 'Incorrect phone or password')
+          return
+        }
       }
 
       // The server validates the role and selects the only allowed destination.
