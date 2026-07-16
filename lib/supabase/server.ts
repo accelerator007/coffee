@@ -10,8 +10,14 @@ export async function createClient() {
       cookies: {
         getAll() { return cookieStore.getAll() },
         setAll(toSet) {
-          toSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options))
+          try {
+            toSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options))
+          } catch {
+            // Server Components can read cookies but cannot always refresh them.
+            // Route handlers, server actions, and the proxy still perform the
+            // actual cookie writes, so page rendering should not crash here.
+          }
         }
       }
     }
