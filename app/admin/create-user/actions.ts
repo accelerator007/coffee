@@ -2,7 +2,7 @@
 
 import { adminClient } from '@/lib/supabase/admin'
 import { hasCurrentUserRole } from '@/lib/auth/roles'
-import { normalizeOmanPhone, phoneAuthEmail } from '@/lib/phone'
+import { normalizeOmanPhone, phoneAuthEmail, staffAuthEmail } from '@/lib/phone'
 
 function readCreatedUserId(value: unknown) {
   if (typeof value === 'string') return value
@@ -103,7 +103,7 @@ export async function createEmployee(data: {
     if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
       return { error: 'اسم المستخدم يجب أن يكون 3-32 حرفاً إنجليزياً أو رقماً' }
     }
-    const email = `${username}@internal.local`
+    const email = staffAuthEmail(username)
 
     const { data: createdUserId, error } = await adminClient.rpc('admin_create_internal_auth_user', {
       p_email: email,

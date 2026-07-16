@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Phone } from 'lucide-react'
 import { Lang, t } from '@/lib/i18n'
-import { legacyPhoneAuthEmail, normalizeOmanPhone, phoneAuthEmail } from '@/lib/phone'
+import { legacyPhoneAuthEmail, legacySafePhoneAuthEmail, normalizeOmanPhone, phoneAuthEmail } from '@/lib/phone'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
@@ -42,12 +42,21 @@ export default function PhoneLoginForm({ lang }: { lang: Lang }) {
       })
 
       if (authError) {
-        const { error: legacyAuthError } = await supabase.auth.signInWithPassword({
-          email: legacyPhoneAuthEmail(normalized.international),
-          password,
-        })
+        const legacyAttempts = [
+          legacySafePhoneAuthEmail(normalized.local),
+          legacyPhoneAuthEmail(normalized.international),
+        ]
 
-        if (legacyAuthError) {
+        let signedIn = false
+        for (const email of legacyAttempts) {
+          const { error: legacyAuthError } = await supabase.auth.signInWithPassword({ email, password })
+          if (!legacyAuthError) {
+            signedIn = true
+            break
+          }
+        }
+
+        if (!signedIn) {
           setError(lang === 'ar' ? 'رقم الهاتف أو كلمة المرور غير صحيحة' : 'Incorrect phone or password')
           return
         }
