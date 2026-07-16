@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { Globe, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Lang } from '@/lib/i18n'
@@ -13,13 +12,13 @@ interface HeaderProps {
 }
 
 export default function Header({ userName, lang, onLangToggle }: HeaderProps) {
-  const router = useRouter()
   const supabase = createClient()
 
   async function handleLogout() {
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    // Only this browser session needs to be cleared. A hard navigation also
+    // prevents protected server components from rendering with stale cookies.
+    await supabase.auth.signOut({ scope: 'local' })
+    window.location.replace('/login')
   }
 
   const iconBtn =
