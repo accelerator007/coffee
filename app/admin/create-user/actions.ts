@@ -4,6 +4,16 @@ import { adminClient } from '@/lib/supabase/admin'
 import { hasCurrentUserRole } from '@/lib/auth/roles'
 import { normalizeOmanPhone, phoneAuthEmail } from '@/lib/phone'
 
+function readCreatedUserId(value: unknown) {
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) return readCreatedUserId(value[0])
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    return readCreatedUserId(record.id ?? record.admin_create_internal_auth_user)
+  }
+  return null
+}
+
 export async function createCustomer(data: {
   full_name: string
   phone: string
@@ -46,7 +56,7 @@ export async function createCustomer(data: {
 
     if (error) return { error: error.message }
 
-    const userId = createdUserId as string | null
+    const userId = readCreatedUserId(createdUserId)
     if (!userId) return { error: 'تعذّر إنشاء الحساب' }
 
     const { error: passwordError } = await adminClient.auth.admin.updateUserById(userId, {
@@ -111,7 +121,7 @@ export async function createEmployee(data: {
     })
 
     if (error) return { error: error.message }
-    const userId = createdUserId as string | null
+    const userId = readCreatedUserId(createdUserId)
     if (!userId) return { error: 'تعذّر إنشاء الحساب' }
 
     const { error: passwordError } = await adminClient.auth.admin.updateUserById(userId, {
