@@ -59,11 +59,6 @@ export async function createCustomer(data: {
     const userId = readCreatedUserId(createdUserId)
     if (!userId) return { error: 'تعذّر إنشاء الحساب' }
 
-    const { error: passwordError } = await adminClient.auth.admin.updateUserById(userId, {
-      password: data.password,
-    })
-    if (passwordError) return { error: passwordError.message }
-
     const birthDate = data.birth_date?.trim() || null
     if (birthDate) {
       await adminClient.from('profiles').update({ birth_date: birthDate }).eq('id', userId)
@@ -123,11 +118,6 @@ export async function createEmployee(data: {
     if (error) return { error: error.message }
     const userId = readCreatedUserId(createdUserId)
     if (!userId) return { error: 'تعذّر إنشاء الحساب' }
-
-    const { error: passwordError } = await adminClient.auth.admin.updateUserById(userId, {
-      password: data.password,
-    })
-    if (passwordError) return { error: passwordError.message }
 
     return { success: true }
   } catch (error) {
