@@ -68,6 +68,9 @@ export default async function AdminPage() {
             <Link href="/admin/cards" className={`${navLink} text-foreground bg-muted hover:bg-border`}>
               {t('cards', lang)}
             </Link>
+            <Link href="/admin/staff" className={`${navLink} text-foreground bg-muted hover:bg-border`}>
+              {t('staffTitle', lang)}
+            </Link>
             <ExportCustomersButton lang={lang} />
             <Link href="/admin/customers" className={`${navLink} text-background bg-brand hover:bg-brand-dark`}>
               {t('customers', lang)} ←

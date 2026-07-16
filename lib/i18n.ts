@@ -60,6 +60,15 @@ const translations = {
   trend: { ar: 'آخر 30 يوم', en: 'Last 30 Days' },
   customers: { ar: 'العملاء', en: 'Customers' },
   searchCustomers: { ar: 'ابحث بالاسم أو الهاتف', en: 'Search by name or phone' },
+  // Staff & roles
+  staffTitle: { ar: 'الموظفون والصلاحيات', en: 'Staff & Roles' },
+  searchStaff: { ar: 'ابحث بالاسم أو الإيميل', en: 'Search by name or email' },
+  roleLabel: { ar: 'الصلاحية', en: 'Role' },
+  roleAdmin: { ar: 'أدمن', en: 'Admin' },
+  roleEmployee: { ar: 'موظف', en: 'Employee' },
+  roleCustomer: { ar: 'عميل', en: 'Customer' },
+  noUsers: { ar: 'لا يوجد مستخدمون', en: 'No users' },
+  notAuthorized: { ar: 'غير مصرّح — الأدمن فقط', en: 'Not authorized — admins only' },
   name: { ar: 'الاسم', en: 'Name' },
   timesUsed: { ar: 'مرات الاستخدام', en: 'Times Used' },
   // Dashboard — District 7 screens
