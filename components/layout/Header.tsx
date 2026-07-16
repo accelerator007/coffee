@@ -14,15 +14,27 @@ interface HeaderProps {
 export default function Header({ userName, lang, onLangToggle }: HeaderProps) {
   const supabase = createClient()
 
+  function clearSupabaseBrowserCookies() {
+    document.cookie
+      .split(';')
+      .map(cookie => cookie.split('=')[0]?.trim())
+      .filter(name => name?.startsWith('sb-'))
+      .forEach(name => {
+        document.cookie = `${name}=; path=/; max-age=0; samesite=lax`
+        document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+      })
+  }
+
   async function handleLogout() {
     // Only this browser session needs to be cleared. A hard navigation also
     // prevents protected server components from rendering with stale cookies.
     try {
       await Promise.race([
-        supabase.auth.signOut({ scope: 'local' }),
+        supabase.auth.signOut(),
         new Promise(resolve => window.setTimeout(resolve, 1500)),
       ])
     } finally {
+      clearSupabaseBrowserCookies()
       window.location.replace('/login')
     }
   }
