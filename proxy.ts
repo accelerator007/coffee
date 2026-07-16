@@ -35,15 +35,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // app_metadata is controlled by trusted server-side code. Never authorize
-  // from user_metadata, because users can update that field themselves.
+  // profiles is RLS-protected and reflects admin role changes immediately.
+  // app_metadata is controlled by trusted server code and is a safe fallback.
   let role: AppRole | null = null
-  const metadataRole = (claims.app_metadata as { role?: unknown } | undefined)?.role
-  if (isRole(metadataRole)) role = metadataRole
-
-  // Backwards-compatible fallback for existing accounts that predate the move
-  // to app_metadata. RLS must allow a signed-in user to read their own profile.
-  if (!role && typeof claims.sub === 'string') {
+  if (typeof claims.sub === 'string') {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -51,6 +46,11 @@ export async function proxy(request: NextRequest) {
       .maybeSingle()
 
     if (isRole(profile?.role)) role = profile.role
+  }
+
+  if (!role) {
+    const metadataRole = (claims.app_metadata as { role?: unknown } | undefined)?.role
+    if (isRole(metadataRole)) role = metadataRole
   }
 
   // A signed-in account without a trusted role is treated as unauthorized.

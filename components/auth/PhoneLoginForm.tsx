@@ -46,7 +46,8 @@ export default function PhoneLoginForm({ lang }: { lang: Lang }) {
         return
       }
 
-      router.replace('/dashboard')
+      // The server validates the role and selects the only allowed destination.
+      router.replace('/')
       router.refresh()
     } catch {
       setError(lang === 'ar' ? 'تعذر الاتصال. تحقق من الإنترنت وحاول مجدداً' : 'Could not connect. Check your internet and try again')

@@ -23,13 +23,17 @@ export default function StaffLoginForm({ lang }: { lang: Lang }) {
     setLoading(true)
 
     // Support both real email and username (appends @internal.local)
-    const email = identifier.includes('@') ? identifier : `${identifier}@internal.local`
+    const normalizedIdentifier = identifier.trim().toLowerCase()
+    const email = normalizedIdentifier.includes('@')
+      ? normalizedIdentifier
+      : `${normalizedIdentifier}@internal.local`
 
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError(lang === 'ar' ? 'البريد/اسم المستخدم أو كلمة المرور غير صحيحة' : 'Invalid credentials')
     } else {
-      router.push('/admin')
+      // Let the server route admin and employee accounts from their trusted role.
+      router.replace('/')
       router.refresh()
     }
     setLoading(false)
