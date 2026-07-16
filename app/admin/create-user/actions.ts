@@ -49,6 +49,11 @@ export async function createCustomer(data: {
     const userId = createdUserId as string | null
     if (!userId) return { error: 'تعذّر إنشاء الحساب' }
 
+    const { error: passwordError } = await adminClient.auth.admin.updateUserById(userId, {
+      password: data.password,
+    })
+    if (passwordError) return { error: passwordError.message }
+
     const birthDate = data.birth_date?.trim() || null
     if (birthDate) {
       await adminClient.from('profiles').update({ birth_date: birthDate }).eq('id', userId)
@@ -95,7 +100,7 @@ export async function createEmployee(data: {
     }
     const email = `${username}@internal.local`
 
-    const { error } = await adminClient.rpc('admin_create_internal_auth_user', {
+    const { data: createdUserId, error } = await adminClient.rpc('admin_create_internal_auth_user', {
       p_email: email,
       p_password: data.password,
       p_role: 'employee',
@@ -106,6 +111,14 @@ export async function createEmployee(data: {
     })
 
     if (error) return { error: error.message }
+    const userId = createdUserId as string | null
+    if (!userId) return { error: 'تعذّر إنشاء الحساب' }
+
+    const { error: passwordError } = await adminClient.auth.admin.updateUserById(userId, {
+      password: data.password,
+    })
+    if (passwordError) return { error: passwordError.message }
+
     return { success: true }
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'تعذّر إنشاء الحساب' }
