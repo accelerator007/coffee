@@ -173,7 +173,11 @@ export default function LoyaltyClient({
   const inputClass = `w-full min-h-11 px-4 rounded-2xl border border-border bg-surface text-foreground
     focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand`
 
-  async function run(key: string, action: () => Promise<{ error?: string; success?: boolean }>) {
+  async function run(
+    key: string,
+    action: () => Promise<{ error?: string; success?: boolean }>,
+    afterSuccess?: () => void
+  ) {
     setBusy(key)
     setMessage('')
     const result = await action()
@@ -183,6 +187,7 @@ export default function LoyaltyClient({
       return
     }
     setMessage(ar ? 'تم الحفظ' : 'Saved')
+    afterSuccess?.()
     router.refresh()
   }
 
@@ -362,7 +367,14 @@ export default function LoyaltyClient({
             </div>
             <div className="flex gap-2 flex-wrap">
               <Button
-                onClick={() => run('offer-save', () => offerId === 'new' ? createOffer(normalizedOffer()) : updateOffer(offerId!, normalizedOffer()))}
+                onClick={() => run(
+                  'offer-save',
+                  () => offerId === 'new' ? createOffer(normalizedOffer()) : updateOffer(offerId!, normalizedOffer()),
+                  () => {
+                    setOfferId(null)
+                    setOfferForm(emptyOffer())
+                  }
+                )}
                 loading={busy === 'offer-save'}
               >
                 {ar ? 'حفظ العرض' : 'Save offer'}
@@ -410,7 +422,20 @@ export default function LoyaltyClient({
           <Field label={ar ? 'العنوان إنجليزي' : 'English title'}><input value={doubleForm.title_en} onChange={e => setDoubleForm({ ...doubleForm, title_en: e.target.value })} className={inputClass} /></Field>
           <Field label={ar ? 'اليوم' : 'Day'}><input type="date" value={doubleForm.day} onChange={e => setDoubleForm({ ...doubleForm, day: e.target.value })} className={inputClass} dir="ltr" /></Field>
           <Field label={ar ? 'المضاعف' : 'Multiplier'}><input type="number" min="1" step="0.25" value={doubleForm.multiplier} onChange={e => setDoubleForm({ ...doubleForm, multiplier: Number(e.target.value) })} className={inputClass} dir="ltr" /></Field>
-          <Button onClick={() => run('double-create', () => createDoublePointDay(doubleForm))} loading={busy === 'double-create'}>
+          <Button
+            onClick={() => run(
+              'double-create',
+              () => createDoublePointDay(doubleForm),
+              () => setDoubleForm({
+                title_ar: '',
+                title_en: '',
+                day: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Muscat' }),
+                multiplier: 2,
+                is_active: true,
+              })
+            )}
+            loading={busy === 'double-create'}
+          >
             {ar ? 'إضافة' : 'Add'}
           </Button>
         </div>
