@@ -1,7 +1,7 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { adminClient } from '@/lib/supabase/admin'
+import { hasCurrentUserRole } from '@/lib/auth/roles'
 
 export type AppRole = 'admin' | 'employee' | 'customer'
 
@@ -22,11 +22,7 @@ const ROLES: AppRole[] = ['admin', 'employee', 'customer']
  * RLS-scoped session before doing anything privileged.
  */
 async function isCallerAdmin(): Promise<boolean> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return false
-  const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  return data?.role === 'admin'
+  return hasCurrentUserRole('admin')
 }
 
 export async function listUsers(): Promise<UserRow[]> {

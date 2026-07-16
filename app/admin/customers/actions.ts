@@ -2,16 +2,18 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { adminClient } from '@/lib/supabase/admin'
-
-function normalizePhone(raw: string) {
-  return raw.startsWith('+') ? raw : `+968${raw.replace(/^0/, '')}`
-}
+import { hasCurrentUserRole } from '@/lib/auth/roles'
+import { normalizeOmanPhone } from '@/lib/phone'
 
 export async function updateCustomer(
   id: string,
   data: { full_name: string; phone: string }
 ) {
-  const phone = normalizePhone(data.phone.trim())
+  if (!(await hasCurrentUserRole('admin'))) return { error: 'not_authorized' }
+
+  const normalized = normalizeOmanPhone(data.phone)
+  if (!normalized.ok) return { error: 'رقم الهاتف غير صحيح' }
+  const phone = normalized.international
   const full_name = data.full_name.trim()
 
   if (!full_name) return { error: 'الاسم مطلوب' }
@@ -27,7 +29,8 @@ export async function updateCustomer(
   // Keep the auth user (login email + metadata) in sync with the new phone
   const { error: authError } = await adminClient.auth.admin.updateUserById(id, {
     email: `${phone}@phone.local`,
-    user_metadata: { role: 'customer', full_name, phone },
+    app_metadata: { role: 'customer' },
+    user_metadata: { full_name, phone },
   })
 
   if (authError) return { error: authError.message }
@@ -35,6 +38,8 @@ export async function updateCustomer(
 }
 
 export async function deleteCustomer(id: string) {
+  if (!(await hasCurrentUserRole('admin'))) return { error: 'not_authorized' }
+
   // Deleting the auth user cascades to the profile (and its subscriptions/redemptions)
   const { error } = await adminClient.auth.admin.deleteUser(id)
   if (error) return { error: error.message }

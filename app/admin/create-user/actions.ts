@@ -1,22 +1,30 @@
 'use server'
 
 import { adminClient } from '@/lib/supabase/admin'
+import { hasCurrentUserRole } from '@/lib/auth/roles'
+import { normalizeOmanPhone } from '@/lib/phone'
 
 export async function createCustomer(data: {
   full_name: string
   phone: string
   password: string
 }) {
-  const phone = data.phone.startsWith('+') ? data.phone : `+968${data.phone.replace(/^0/, '')}`
+  if (!(await hasCurrentUserRole('admin'))) return { error: 'not_authorized' }
+
+  const normalized = normalizeOmanPhone(data.phone)
+  if (!normalized.ok) return { error: 'رقم الهاتف غير صحيح' }
+  const fullName = data.full_name.trim()
+  if (!fullName) return { error: 'الاسم مطلوب' }
+  const phone = normalized.international
   const email = `${phone}@phone.local`
 
   const { data: created, error } = await adminClient.auth.admin.createUser({
     email,
     password: data.password,
     email_confirm: true,
+    app_metadata: { role: 'customer' },
     user_metadata: {
-      role: 'customer',
-      full_name: data.full_name,
+      full_name: fullName,
       phone,
     },
   })
@@ -30,16 +38,24 @@ export async function createEmployee(data: {
   username: string
   password: string
 }) {
-  const email = `${data.username}@internal.local`
+  if (!(await hasCurrentUserRole('admin'))) return { error: 'not_authorized' }
+
+  const username = data.username.trim().toLowerCase()
+  const fullName = data.full_name.trim()
+  if (!fullName) return { error: 'الاسم مطلوب' }
+  if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
+    return { error: 'اسم المستخدم يجب أن يكون 3-32 حرفاً إنجليزياً أو رقماً' }
+  }
+  const email = `${username}@internal.local`
 
   const { error } = await adminClient.auth.admin.createUser({
     email,
     password: data.password,
     email_confirm: true,
+    app_metadata: { role: 'employee' },
     user_metadata: {
-      role: 'employee',
-      full_name: data.full_name,
-      username: data.username,
+      full_name: fullName,
+      username,
     },
   })
 
