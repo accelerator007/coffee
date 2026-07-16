@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
 import { Playfair_Display, Amiri, Inter, Almarai } from 'next/font/google'
 import './globals.css'
 
@@ -37,11 +38,13 @@ export const metadata: Metadata = {
   description: 'Specialty coffee loyalty & subscriptions · ولاء واشتراكات القهوة المختصة',
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const cookieStore = await cookies()
+  const lang = cookieStore.get('lang')?.value === 'en' ? 'en' : 'ar'
   return (
     <html
-      lang="ar"
-      dir="rtl"
+      lang={lang}
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
       className={`${playfair.variable} ${amiri.variable} ${inter.variable} ${almarai.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">

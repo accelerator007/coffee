@@ -28,7 +28,7 @@ export default function Header({ userName, lang, onLangToggle }: HeaderProps) {
   }
 
   const iconBtn =
-    'inline-flex items-center gap-1.5 border border-border bg-surface text-foreground rounded-full px-3 py-1.5 text-xs font-bold hover:bg-muted transition-colors min-h-9'
+    'inline-flex items-center gap-1.5 border border-border bg-surface text-foreground rounded-full px-3 py-1.5 text-xs font-bold hover:bg-muted transition-colors min-h-11 min-w-11 justify-center'
 
   return (
     <header className="glass border-b border-border px-4 sm:px-5 flex items-center gap-2.5 sticky top-0 z-10 min-h-[60px]">

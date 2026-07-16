@@ -134,8 +134,8 @@ export default function StaffClient({ lang }: { lang: Lang }) {
             {filtered.map(u => (
               <ListRow
                 key={u.id}
-                thumb={(u.full_name?.trim()?.[0] ?? '?').toUpperCase()}
-                title={u.full_name || '—'}
+                thumb={(u.full_name?.trim()?.[0] ?? u.email?.[0] ?? u.username?.[0] ?? '?').toUpperCase()}
+                title={u.full_name || u.email?.split('@')[0] || u.username || u.phone || '—'}
                 subtitle={
                   <span dir="ltr" className="font-mono text-xs">
                     {u.email || u.username || u.phone || '—'}

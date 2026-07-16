@@ -12,10 +12,12 @@ import { exportCustomersReport } from '@/app/admin/actions'
  */
 export default function ExportCustomersButton({ lang }: { lang: Lang }) {
   const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
   const ar = lang === 'ar'
 
   async function handleExport() {
     setLoading(true)
+    setMessage('')
     try {
       const [rows, { Workbook }] = await Promise.all([
         exportCustomersReport(),
@@ -86,12 +88,16 @@ export default function ExportCustomersButton({ lang }: { lang: Lang }) {
       a.click()
       a.remove()
       URL.revokeObjectURL(url)
+      setMessage(ar ? 'تم تنزيل التقرير بنجاح' : 'Report downloaded successfully')
+    } catch {
+      setMessage(ar ? 'تعذّر تصدير التقرير. حاول مرة أخرى.' : 'Could not export the report. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
+    <div className="inline-flex flex-col items-start gap-1">
     <button
       onClick={handleExport}
       disabled={loading}
@@ -102,5 +108,7 @@ export default function ExportCustomersButton({ lang }: { lang: Lang }) {
         : <Download size={15} strokeWidth={2} aria-hidden />}
       {t('exportExcel', lang)}
     </button>
+      {message && <span role="status" aria-live="polite" className="text-xs text-text-muted">{message}</span>}
+    </div>
   )
 }

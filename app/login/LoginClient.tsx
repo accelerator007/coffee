@@ -14,6 +14,16 @@ export default function LoginClient() {
   const [tab, setTab] = useState<Tab>('customer')
   const [lang, setLang] = useState<Lang>('ar')
 
+  function toggleLang() {
+    setLang(current => {
+      const next: Lang = current === 'ar' ? 'en' : 'ar'
+      document.cookie = `lang=${next};path=/;max-age=31536000;samesite=lax`
+      document.documentElement.lang = next
+      document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr'
+      return next
+    })
+  }
+
   return (
     <div
       className="min-h-screen flex flex-col justify-center px-[22px] py-10"
@@ -23,7 +33,7 @@ export default function LoginClient() {
         {/* Lang toggle */}
         <div className="flex justify-end mb-4">
           <button
-            onClick={() => setLang(l => (l === 'ar' ? 'en' : 'ar'))}
+            onClick={toggleLang}
             className="text-xs font-bold text-text-muted hover:text-foreground transition-colors px-4 py-1.5 rounded-full border border-border bg-surface/70 backdrop-blur"
           >
             {lang === 'ar' ? 'English' : 'العربية'}
