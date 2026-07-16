@@ -49,10 +49,11 @@ export async function deleteCustomer(id: string) {
 export async function searchCustomers(q: string) {
   const supabase = await createClient()
 
-  // Get all customers from profiles directly
+  // Get all customers from profiles directly. The fallback keeps the current
+  // customers page usable while the loyalty migration is being applied.
   let profileQuery = supabase
     .from('profiles')
-    .select('id, full_name, phone, birth_date, created_at, loyalty_accounts(points_balance, lifetime_points, referral_code, referred_by)')
+    .select('id, full_name, phone, birth_date, created_at')
     .eq('role', 'customer')
     .order('created_at', { ascending: false })
 
@@ -60,7 +61,31 @@ export async function searchCustomers(q: string) {
     profileQuery = profileQuery.or(`full_name.ilike.%${q}%,phone.ilike.%${q}%`)
   }
 
-  const { data: profiles } = await profileQuery
+  const { data: profileRows, error: profileError } = await profileQuery
+  let profiles = profileRows
+
+  if (profileError) {
+    let fallbackQuery = supabase
+      .from('profiles')
+      .select('id, full_name, phone, created_at')
+      .eq('role', 'customer')
+      .order('created_at', { ascending: false })
+
+    if (q) {
+      fallbackQuery = fallbackQuery.or(`full_name.ilike.%${q}%,phone.ilike.%${q}%`)
+    }
+
+    const fallback = await fallbackQuery
+    profiles = (fallback.data ?? []).map(p => ({ ...p, birth_date: null }))
+  }
+
+  const { data: loyaltyRows } = await supabase
+    .from('loyalty_accounts')
+    .select('customer_id, points_balance, lifetime_points, referral_code')
+
+  const loyaltyByCustomer = new Map(
+    (loyaltyRows ?? []).map(row => [row.customer_id, row])
+  )
 
   // Enrich with subscription data from RPC
   const { data: rpcData } = await supabase.rpc('admin_customer_detail', { search: q || null })
@@ -70,7 +95,7 @@ export async function searchCustomers(q: string) {
     const rpc = rpcMap.get(p.id) as {
       package_name?: string; tier?: string | null; status?: string; days_left?: number; times_used?: number
     } | undefined
-    const account = Array.isArray(p.loyalty_accounts) ? p.loyalty_accounts[0] : p.loyalty_accounts
+    const account = loyaltyByCustomer.get(p.id)
     return {
       id: p.id,
       full_name: p.full_name,
