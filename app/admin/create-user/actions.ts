@@ -34,21 +34,19 @@ export async function createCustomer(data: {
       referrerId = referrer.customer_id
     }
 
-    const { data: created, error } = await adminClient.auth.admin.createUser({
-      email,
-      password: data.password,
-      email_confirm: true,
-      app_metadata: { role: 'customer' },
-      user_metadata: {
-        full_name: fullName,
-        phone,
-        birth_date: data.birth_date || null,
-      },
+    const { data: createdUserId, error } = await adminClient.rpc('admin_create_internal_auth_user', {
+      p_email: email,
+      p_password: data.password,
+      p_role: 'customer',
+      p_full_name: fullName,
+      p_phone: phone,
+      p_username: null,
+      p_birth_date: data.birth_date || null,
     })
 
     if (error) return { error: error.message }
 
-    const userId = created.user?.id
+    const userId = createdUserId as string | null
     if (!userId) return { error: 'تعذّر إنشاء الحساب' }
 
     const birthDate = data.birth_date?.trim() || null
@@ -97,15 +95,14 @@ export async function createEmployee(data: {
     }
     const email = `${username}@internal.local`
 
-    const { error } = await adminClient.auth.admin.createUser({
-      email,
-      password: data.password,
-      email_confirm: true,
-      app_metadata: { role: 'employee' },
-      user_metadata: {
-        full_name: fullName,
-        username,
-      },
+    const { error } = await adminClient.rpc('admin_create_internal_auth_user', {
+      p_email: email,
+      p_password: data.password,
+      p_role: 'employee',
+      p_full_name: fullName,
+      p_phone: null,
+      p_username: username,
+      p_birth_date: null,
     })
 
     if (error) return { error: error.message }
