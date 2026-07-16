@@ -28,14 +28,15 @@ export default async function AdminPage() {
     supabase.rpc('admin_overview_kpis'),
     supabase.rpc('admin_subscriptions_by_package'),
     supabase.rpc('admin_redemptions_last_7_days'),
-  ])
+  ]).catch(() => [null, null, null] as const)
 
-  const kpis = kpisRes.data?.[0] as {
+  const kpisRows = Array.isArray(kpisRes?.data) ? kpisRes.data : []
+  const kpis = kpisRows[0] as {
     total_subscribers: number; active_subscribers: number; expired_subscribers: number;
     total_redemptions: number; avg_redemptions_per_subscriber: number; total_revenue: number;
   } | undefined
-  const byPackage = byPackageRes.data ?? []
-  const trend = trendRes.data ?? []
+  const byPackage = Array.isArray(byPackageRes?.data) ? byPackageRes.data : []
+  const trend = Array.isArray(trendRes?.data) ? trendRes.data : []
 
   const navLink = 'text-sm font-bold px-4 py-1.5 rounded-full transition-colors'
 

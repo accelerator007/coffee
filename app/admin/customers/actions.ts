@@ -5,6 +5,15 @@ import { adminClient } from '@/lib/supabase/admin'
 import { hasCurrentUserRole } from '@/lib/auth/roles'
 import { normalizeOmanPhone, phoneAuthEmail } from '@/lib/phone'
 
+function maintenanceError(message: string) {
+  if (message.includes('profile_phone_exists')) return 'رقم الهاتف مستخدم من عميل آخر'
+  if (message.includes('auth_user_email_exists')) return 'رقم الهاتف مستخدم من حساب آخر'
+  if (message.includes('auth_user_not_found')) return 'حساب الدخول غير موجود لهذا العميل'
+  if (message.includes('full_name_required')) return 'الاسم مطلوب'
+  if (message.includes('invalid_email')) return 'بيانات الدخول غير صحيحة'
+  return message
+}
+
 export async function updateCustomer(
   id: string,
   data: { full_name: string; phone: string; birth_date?: string | null }
@@ -18,31 +27,23 @@ export async function updateCustomer(
 
   if (!full_name) return { error: 'الاسم مطلوب' }
 
-  // Update the profile row
-  const { error: profileError } = await adminClient
-    .from('profiles')
-    .update({ full_name, phone, birth_date: data.birth_date || null })
-    .eq('id', id)
-
-  if (profileError) return { error: profileError.message }
-
-  // Keep the auth user (login email + metadata) in sync with the new phone
-  const { error: authError } = await adminClient.auth.admin.updateUserById(id, {
-    email: phoneAuthEmail(normalized.local),
-    app_metadata: { role: 'customer' },
-    user_metadata: { full_name, phone, birth_date: data.birth_date || null },
+  const { error } = await adminClient.rpc('admin_update_customer_auth_user', {
+    p_user: id,
+    p_email: phoneAuthEmail(normalized.local),
+    p_full_name: full_name,
+    p_phone: phone,
+    p_birth_date: data.birth_date || null,
   })
 
-  if (authError) return { error: authError.message }
+  if (error) return { error: maintenanceError(error.message) }
   return { success: true }
 }
 
 export async function deleteCustomer(id: string) {
   if (!(await hasCurrentUserRole('admin'))) return { error: 'not_authorized' }
 
-  // Deleting the auth user cascades to the profile (and its subscriptions/redemptions)
-  const { error } = await adminClient.auth.admin.deleteUser(id)
-  if (error) return { error: error.message }
+  const { error } = await adminClient.rpc('admin_delete_auth_user', { p_user: id })
+  if (error) return { error: maintenanceError(error.message) }
   return { success: true }
 }
 

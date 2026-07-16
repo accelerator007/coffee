@@ -28,27 +28,27 @@ async function isCallerAdmin(): Promise<boolean> {
 export async function listUsers(): Promise<UserRow[]> {
   if (!(await isCallerAdmin())) return []
 
-  const [authRes, profilesRes] = await Promise.all([
-    adminClient.auth.admin.listUsers({ page: 1, perPage: 1000 }),
-    adminClient.from('profiles').select('id, role, full_name, phone, username'),
-  ])
+  const { data, error } = await adminClient.rpc('admin_list_app_users')
+  if (error) return []
 
-  type ProfileRow = { id: string; role: AppRole; full_name: string; phone: string | null; username: string | null }
-  const byId = new Map<string, ProfileRow>((profilesRes.data ?? []).map(p => [p.id, p as ProfileRow]))
+  type DbUserRow = {
+    id: string
+    email: string | null
+    full_name: string | null
+    role: string | null
+    phone: string | null
+    username: string | null
+  }
 
-  const rows: UserRow[] = (authRes.data?.users ?? []).map(u => {
-    const p = byId.get(u.id)
-    // The middleware authorizes from app_metadata.role (trusted, server-set);
-    // is_admin()/RLS read profiles.role. Prefer profiles, then app_metadata.
-    const appRole = u.app_metadata?.role as AppRole | undefined
-    const metaName = u.user_metadata?.full_name as string | undefined
+  const rows: UserRow[] = ((data ?? []) as DbUserRow[]).map(u => {
+    const role = ROLES.includes(u.role as AppRole) ? (u.role as AppRole) : 'customer'
     return {
       id: u.id,
       email: u.email ?? null,
-      full_name: p?.full_name || metaName || '',
-      role: (p?.role ?? appRole ?? 'customer'),
-      phone: p?.phone ?? null,
-      username: p?.username ?? null,
+      full_name: u.full_name || '',
+      role,
+      phone: u.phone ?? null,
+      username: u.username ?? null,
     }
   })
 
@@ -61,27 +61,12 @@ export async function setUserRole(userId: string, role: AppRole) {
   if (!(await isCallerAdmin())) return { error: 'not_authorized' as const }
   if (!ROLES.includes(role)) return { error: 'bad_role' as const }
 
-  // Keep both stores in sync: the middleware authorizes from app_metadata.role
-  // (server-controlled, users can't edit it), while is_admin()/RLS read
-  // profiles.role. Merge app_metadata (fetch first) so provider info isn't lost.
-  const { data: current, error: getError } = await adminClient.auth.admin.getUserById(userId)
-  if (getError) return { error: getError.message }
+  const { error } = await adminClient.rpc('admin_set_user_role', {
+    p_user: userId,
+    p_role: role,
+  })
 
-  const appMeta = { ...(current.user?.app_metadata ?? {}), role }
-  const { error: authError } = await adminClient.auth.admin.updateUserById(userId, { app_metadata: appMeta })
-  if (authError) return { error: authError.message }
-
-  // Update the existing profile's role only; insert (with a name) if missing so
-  // the row is never left without the not-null full_name.
-  const { data: existing } = await adminClient.from('profiles').select('id').eq('id', userId).maybeSingle()
-  const { error: profileError } = existing
-    ? await adminClient.from('profiles').update({ role }).eq('id', userId)
-    : await adminClient.from('profiles').insert({
-        id: userId,
-        role,
-        full_name: (current.user?.user_metadata?.full_name as string | undefined) ?? '',
-      })
-  if (profileError) return { error: profileError.message }
+  if (error) return { error: error.message }
 
   return { success: true }
 }
