@@ -6,29 +6,54 @@ export type AppRole = 'admin' | 'employee' | 'customer'
 
 const APP_ROLES: AppRole[] = ['admin', 'employee', 'customer']
 
+export type CurrentUserContext = {
+  id: string
+  role: AppRole
+  fullName?: string
+}
+
 export function isAppRole(value: unknown): value is AppRole {
   return APP_ROLES.includes(value as AppRole)
 }
 
 /**
- * Resolve the signed-in user's trusted role. profiles is protected by RLS and
- * reflects role changes immediately; app_metadata is the signed-token fallback.
+ * Resolve the signed-in user's trusted context from JWT claims. Using claims
+ * avoids a Server Component redirect loop caused by auth.getUser() attempting
+ * session refresh/cookie writes during page rendering.
  */
-export async function getCurrentUserRole(): Promise<AppRole | null> {
+export async function getCurrentUserContext(): Promise<CurrentUserContext | null> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  const { data } = await supabase.auth.getClaims()
+  const claims = data?.claims
+
+  if (!claims || typeof claims.sub !== 'string') return null
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
-    .eq('id', user.id)
+    .select('role, full_name')
+    .eq('id', claims.sub)
     .maybeSingle()
 
-  if (isAppRole(profile?.role)) return profile.role
+  let role: AppRole | null = null
+  if (isAppRole(profile?.role)) role = profile.role
 
-  const metadataRole = user.app_metadata?.role
-  return isAppRole(metadataRole) ? metadataRole : null
+  if (!role) {
+    const metadataRole = (claims.app_metadata as { role?: unknown } | undefined)?.role
+    if (isAppRole(metadataRole)) role = metadataRole
+  }
+
+  if (!role) return null
+
+  const metadataName = (claims.user_metadata as { full_name?: unknown } | undefined)?.full_name
+  return {
+    id: claims.sub,
+    role,
+    fullName: profile?.full_name || (typeof metadataName === 'string' ? metadataName : undefined),
+  }
+}
+
+export async function getCurrentUserRole(): Promise<AppRole | null> {
+  return (await getCurrentUserContext())?.role ?? null
 }
 
 export async function hasCurrentUserRole(...allowed: AppRole[]): Promise<boolean> {

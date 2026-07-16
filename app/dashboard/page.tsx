@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { Coffee, MapPin, Camera } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUserContext } from '@/lib/auth/roles'
 import { Lang, t, brand } from '@/lib/i18n'
 import Card from '@/components/ui/Card'
 import SubscriptionCard from '@/components/dashboard/SubscriptionCard'
@@ -19,16 +20,16 @@ function getMuscatDate() {
 }
 
 export default async function DashboardPage() {
+  const currentUser = await getCurrentUserContext()
+  if (!currentUser) redirect('/login')
+
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
 
   const cookieStore = await cookies()
   const lang: Lang = (cookieStore.get('lang')?.value as Lang) ?? 'ar'
   const ar = lang === 'ar'
 
-  // Display name comes from the JWT metadata — no profiles query needed.
-  const fullName = user.user_metadata?.full_name as string | undefined
+  const fullName = currentUser.fullName
 
   // Subscription days_left is computed in SQL with Asia/Muscat timezone.
   const [subRes, loyaltyRes, offersRes, notificationsRes] = await Promise.all([
@@ -62,7 +63,7 @@ export default async function DashboardPage() {
     todayUsed = count ?? 0
   }
 
-  const code = `D7-${user.id.slice(0, 4).toUpperCase()}-${user.id.slice(-4).toUpperCase()}`
+  const code = `D7-${currentUser.id.slice(0, 4).toUpperCase()}-${currentUser.id.slice(-4).toUpperCase()}`
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -108,7 +109,7 @@ export default async function DashboardPage() {
 
             {/* QR */}
             <Card variant="feature" className="text-center flex flex-col items-center">
-              <QRCodeDisplay value={user.id} />
+              <QRCodeDisplay value={currentUser.id} />
               <p className="text-[15px] font-semibold text-foreground mt-4 mb-1">{t('scanToRedeem', lang)}</p>
               <p className="text-[13px] text-text-muted mb-3.5">{t('showToStaff', lang)}</p>
               <Badge variant="neutral">{code}</Badge>

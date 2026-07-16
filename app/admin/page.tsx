@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUserContext } from '@/lib/auth/roles'
 import { Lang, t, brand } from '@/lib/i18n'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
@@ -14,15 +15,15 @@ import RedemptionChart from '@/components/admin/RedemptionChart'
 import AdminPageClient from './AdminPageClient'
 
 export default async function AdminPage() {
+  const currentUser = await getCurrentUserContext()
+  if (!currentUser) redirect('/login')
+
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
 
   const cookieStore = await cookies()
   const lang: Lang = (cookieStore.get('lang')?.value as Lang) ?? 'ar'
 
-  // Display name comes from the JWT metadata — no profiles query needed.
-  const fullName = user.user_metadata?.full_name as string | undefined
+  const fullName = currentUser.fullName
 
   const [kpisRes, byPackageRes, trendRes] = await Promise.all([
     supabase.rpc('admin_overview_kpis'),
