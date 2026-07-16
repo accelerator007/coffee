@@ -39,18 +39,18 @@ export async function proxy(request: NextRequest) {
   // app_metadata is controlled by trusted server code and is a safe fallback.
   let role: AppRole | null = null
   if (typeof claims.sub === 'string') {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', claims.sub)
       .maybeSingle()
 
     if (isRole(profile?.role)) role = profile.role
-  }
-
-  if (!role) {
-    const metadataRole = (claims.app_metadata as { role?: unknown } | undefined)?.role
-    if (isRole(metadataRole)) role = metadataRole
+    if (!profile && !profileError) role = null
+    else if (!role && profileError) {
+      const metadataRole = (claims.app_metadata as { role?: unknown } | undefined)?.role
+      if (isRole(metadataRole)) role = metadataRole
+    }
   }
 
   // A signed-in account without a trusted role is treated as unauthorized.
