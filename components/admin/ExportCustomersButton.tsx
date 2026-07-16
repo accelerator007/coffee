@@ -44,6 +44,10 @@ export default function ExportCustomersButton({ lang }: { lang: Lang }) {
       sheet.columns = [
         { header: ar ? 'الاسم' : 'Name', key: 'name', width: 24 },
         { header: ar ? 'الهاتف' : 'Phone', key: 'phone', width: 16 },
+        { header: ar ? 'تاريخ الميلاد' : 'Birthday', key: 'birth', width: 14 },
+        { header: ar ? 'نقاط حالية' : 'Current Points', key: 'points', width: 14 },
+        { header: ar ? 'إجمالي النقاط' : 'Lifetime Points', key: 'lifetime', width: 14 },
+        { header: ar ? 'كود الإحالة' : 'Referral Code', key: 'referral', width: 14 },
         { header: ar ? 'رقم البطاقة' : 'Card Number', key: 'card', width: 18 },
         { header: ar ? 'الباقة' : 'Package', key: 'pkg', width: 18 },
         { header: ar ? 'الفئة' : 'Tier', key: 'tier', width: 10 },
@@ -59,6 +63,10 @@ export default function ExportCustomersButton({ lang }: { lang: Lang }) {
         sheet.addRow({
           name: r.full_name,
           phone: r.phone ?? '',
+          birth: r.birth_date ?? '',
+          points: r.points_balance,
+          lifetime: r.lifetime_points,
+          referral: r.referral_code ?? '',
           card: r.card_uid || '-',
           pkg: r.package_name ?? (ar ? 'بدون باقة' : 'No package'),
           tier: tierLabel(r.tier),

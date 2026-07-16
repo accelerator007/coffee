@@ -18,6 +18,8 @@ export default function CreateUserClient({ lang }: { lang: Lang }) {
   const [cName, setCName] = useState('')
   const [cPhone, setCPhone] = useState('')
   const [cPass, setCPass] = useState('')
+  const [cBirthDate, setCBirthDate] = useState('')
+  const [cReferralCode, setCReferralCode] = useState('')
 
   // Employee fields
   const [eName, setEName] = useState('')
@@ -40,7 +42,13 @@ export default function CreateUserClient({ lang }: { lang: Lang }) {
         setLoading(false)
         return
       }
-      result = await createCustomer({ full_name: cName, phone: cPhone, password: cPass })
+      result = await createCustomer({
+        full_name: cName,
+        phone: cPhone,
+        password: cPass,
+        birth_date: cBirthDate || undefined,
+        referral_code: cReferralCode || undefined,
+      })
     } else {
       if (!eName || !eUsername || !ePass) {
         setError(lang === 'ar' ? 'يرجى ملء جميع الحقول' : 'Please fill all fields')
@@ -114,6 +122,20 @@ export default function CreateUserClient({ lang }: { lang: Lang }) {
               placeholder="••••••••"
               value={cPass}
               onChange={e => setCPass(e.target.value)}
+              ltr
+            />
+            <Input
+              label={lang === 'ar' ? 'تاريخ الميلاد (اختياري)' : 'Birthday (optional)'}
+              type="date"
+              value={cBirthDate}
+              onChange={e => setCBirthDate(e.target.value)}
+              ltr
+            />
+            <Input
+              label={lang === 'ar' ? 'كود الإحالة (اختياري)' : 'Referral code (optional)'}
+              placeholder="D7ABC123"
+              value={cReferralCode}
+              onChange={e => setCReferralCode(e.target.value.toUpperCase())}
               ltr
             />
           </>

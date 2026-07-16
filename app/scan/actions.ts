@@ -155,11 +155,20 @@ export async function nfcRedeem(nfcCardId: string) {
   }
 
   const profile = resolved.customer
-  const { error } = await supabase
+  const { data: redemption, error } = await supabase
     .from('redemptions')
     .insert({ subscription_id: subscription.id, customer_id: profile.id, day: today })
+    .select('id')
+    .single()
 
   if (error) return { error: 'db_error' as const }
+
+  const { data: pointsTx } = await supabase
+    .from('loyalty_transactions')
+    .select('points')
+    .eq('source_redemption_id', redemption.id)
+    .eq('type', 'redemption')
+    .maybeSingle()
 
   return {
     success: true,
@@ -167,6 +176,7 @@ export async function nfcRedeem(nfcCardId: string) {
     packageName: pkg.name,
     remaining: pkg.daily_allowance - (count ?? 0) - 1,
     daysLeft,
+    pointsEarned: pointsTx?.points ?? 0,
   }
 }
 
@@ -199,10 +209,19 @@ export async function recordRedemption(subscriptionId: string, customerId: strin
   )
   if (daysLeft <= 0) return { error: 'expired' as const }
 
-  const { error } = await supabase
+  const { data: redemption, error } = await supabase
     .from('redemptions')
     .insert({ subscription_id: subscriptionId, customer_id: customerId, day: today })
+    .select('id')
+    .single()
 
   if (error) return { error: 'db_error' as const }
-  return { success: true }
+  const { data: pointsTx } = await supabase
+    .from('loyalty_transactions')
+    .select('points')
+    .eq('source_redemption_id', redemption.id)
+    .eq('type', 'redemption')
+    .maybeSingle()
+
+  return { success: true, pointsEarned: pointsTx?.points ?? 0 }
 }

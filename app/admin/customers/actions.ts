@@ -7,7 +7,7 @@ import { normalizeOmanPhone } from '@/lib/phone'
 
 export async function updateCustomer(
   id: string,
-  data: { full_name: string; phone: string }
+  data: { full_name: string; phone: string; birth_date?: string | null }
 ) {
   if (!(await hasCurrentUserRole('admin'))) return { error: 'not_authorized' }
 
@@ -21,7 +21,7 @@ export async function updateCustomer(
   // Update the profile row
   const { error: profileError } = await adminClient
     .from('profiles')
-    .update({ full_name, phone })
+    .update({ full_name, phone, birth_date: data.birth_date || null })
     .eq('id', id)
 
   if (profileError) return { error: profileError.message }
@@ -30,7 +30,7 @@ export async function updateCustomer(
   const { error: authError } = await adminClient.auth.admin.updateUserById(id, {
     email: `${phone}@phone.local`,
     app_metadata: { role: 'customer' },
-    user_metadata: { full_name, phone },
+    user_metadata: { full_name, phone, birth_date: data.birth_date || null },
   })
 
   if (authError) return { error: authError.message }
@@ -52,7 +52,7 @@ export async function searchCustomers(q: string) {
   // Get all customers from profiles directly
   let profileQuery = supabase
     .from('profiles')
-    .select('id, full_name, phone, created_at')
+    .select('id, full_name, phone, birth_date, created_at, loyalty_accounts(points_balance, lifetime_points, referral_code, referred_by)')
     .eq('role', 'customer')
     .order('created_at', { ascending: false })
 
@@ -70,10 +70,15 @@ export async function searchCustomers(q: string) {
     const rpc = rpcMap.get(p.id) as {
       package_name?: string; tier?: string | null; status?: string; days_left?: number; times_used?: number
     } | undefined
+    const account = Array.isArray(p.loyalty_accounts) ? p.loyalty_accounts[0] : p.loyalty_accounts
     return {
       id: p.id,
       full_name: p.full_name,
       phone: p.phone,
+      birth_date: p.birth_date ?? null,
+      points_balance: account?.points_balance ?? 0,
+      lifetime_points: account?.lifetime_points ?? 0,
+      referral_code: account?.referral_code ?? null,
       package_name: rpc?.package_name ?? null,
       tier: rpc?.tier ?? null,
       status: (rpc?.status ?? null) as 'active' | 'expired' | null,

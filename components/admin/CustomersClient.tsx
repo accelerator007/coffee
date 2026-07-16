@@ -20,7 +20,7 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
 
   // Editing state
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [form, setForm] = useState({ full_name: '', phone: '' })
+  const [form, setForm] = useState({ full_name: '', phone: '', birth_date: '' })
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -42,7 +42,7 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
 
   function startEdit(row: CustomerRow) {
     setEditingId(row.id)
-    setForm({ full_name: row.full_name ?? '', phone: row.phone ?? '' })
+    setForm({ full_name: row.full_name ?? '', phone: row.phone ?? '', birth_date: row.birth_date ?? '' })
     setConfirmDelete(false)
     setError('')
   }
@@ -140,6 +140,16 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
                       className={inputClass}
                     />
                   </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium">{ar ? 'تاريخ الميلاد' : 'Birthday'}</label>
+                    <input
+                      type="date"
+                      value={form.birth_date}
+                      onChange={e => setForm({ ...form, birth_date: e.target.value })}
+                      dir="ltr"
+                      className={inputClass}
+                    />
+                  </div>
 
                   {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
@@ -177,12 +187,13 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
                   thumb={(row.full_name?.trim()?.[0] ?? '?').toUpperCase()}
                   title={row.full_name || '—'}
                   subtitle={
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2 flex-wrap">
                       <span dir="ltr" className="font-mono text-xs">{row.phone ?? '—'}</span>
                       {row.package_name
                         ? <span>· {row.package_name}</span>
                         : <span className="opacity-70">· {ar ? 'بدون اشتراك' : 'No subscription'}</span>
                       }
+                      {row.referral_code && <span dir="ltr">· {row.referral_code}</span>}
                     </span>
                   }
                   trailing={
@@ -200,6 +211,9 @@ export default function CustomersClient({ lang }: { lang: Lang }) {
                             {Math.max(0, row.days_left)} {ar ? 'يوم' : 'days'}
                           </span>
                         )}
+                        <span className="text-xs text-text-muted tabular-nums">
+                          {row.points_balance ?? 0} {ar ? 'نقطة' : 'pts'}
+                        </span>
                       </div>
                       <button
                         onClick={() => startEdit(row)}

@@ -16,13 +16,14 @@ const QRScanner = dynamic(() => import('./QRScanner'), { ssr: false })
 type CustomerData = Awaited<ReturnType<typeof getCustomerByQR>>
 type Tab = 'qr' | 'nfc'
 type State = 'scanning' | 'loading' | 'result' | 'success' | 'nfc_success' | 'error'
-type NFCResult = { customerName: string; packageName: string; remaining: number; daysLeft: number }
+type NFCResult = { customerName: string; packageName: string; remaining: number; daysLeft: number; pointsEarned?: number }
 
 export default function ScanClient({ lang }: { lang: Lang }) {
   const [tab, setTab] = useState<Tab>('qr')
   const [state, setState] = useState<State>('scanning')
   const [data, setData] = useState<CustomerData | null>(null)
   const [nfcResult, setNfcResult] = useState<NFCResult | null>(null)
+  const [pointsEarned, setPointsEarned] = useState(0)
   const [errorMsg, setErrorMsg] = useState('')
   const [recording, setRecording] = useState(false)
   const ar = lang === 'ar'
@@ -81,6 +82,7 @@ export default function ScanClient({ lang }: { lang: Lang }) {
         else setErrorMsg(t('error', lang))
         setState('error')
       } else {
+        setPointsEarned(result.pointsEarned ?? 0)
         setState('success')
       }
     } catch {
@@ -94,6 +96,7 @@ export default function ScanClient({ lang }: { lang: Lang }) {
     setState('scanning')
     setData(null)
     setNfcResult(null)
+    setPointsEarned(0)
     setErrorMsg('')
   }
 
@@ -166,6 +169,11 @@ export default function ScanClient({ lang }: { lang: Lang }) {
           </div>
         </div>
         <Badge variant="success" dot className="mt-2">{t('cupLogged', lang)}</Badge>
+        {(nfcResult.pointsEarned ?? 0) > 0 && (
+          <p className="text-sm font-semibold text-success">
+            +{nfcResult.pointsEarned} {ar ? 'نقطة ولاء' : 'loyalty points'}
+          </p>
+        )}
       </Card>
     )
   }
@@ -176,6 +184,11 @@ export default function ScanClient({ lang }: { lang: Lang }) {
         <CircleCheck size={80} strokeWidth={1.5} className="text-foreground" aria-hidden />
         <h3 className="text-xl font-semibold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>{t('cupRedeemed', lang)}</h3>
         <p className="text-success font-semibold text-sm">{t('redemptionSuccess', lang)}</p>
+        {pointsEarned > 0 && (
+          <Badge variant="success" dot>
+            +{pointsEarned} {lang === 'ar' ? 'نقطة ولاء' : 'loyalty points'}
+          </Badge>
+        )}
         <Button onClick={reset}>{t('scanAgain', lang)}</Button>
       </Card>
     )

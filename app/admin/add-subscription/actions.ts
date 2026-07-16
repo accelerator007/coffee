@@ -86,5 +86,9 @@ export async function addSubscription(
     }
   }
 
+  // Referral rewards are granted only after the referred customer gets their
+  // first real subscription.
+  await supabase.rpc('process_referral_reward', { p_referred_customer: customerId })
+
   return { success: true }
 }

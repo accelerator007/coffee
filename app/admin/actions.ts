@@ -18,6 +18,10 @@ export type CustomerReportRow = {
   total_cups: number | null
   consumption_pct: number | null
   card_uid: string | null
+  birth_date: string | null
+  points_balance: number
+  lifetime_points: number
+  referral_code: string | null
 }
 
 type SubRow = {
@@ -38,10 +42,10 @@ type SubRow = {
 export async function exportCustomersReport(): Promise<CustomerReportRow[]> {
   const supabase = await createClient()
 
-  const [profilesRes, subsRes, redsRes, cardsRes] = await Promise.all([
+  const [profilesRes, subsRes, redsRes, cardsRes, loyaltyRes] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, full_name, phone')
+      .select('id, full_name, phone, birth_date')
       .eq('role', 'customer')
       .order('full_name'),
     supabase
@@ -54,12 +58,22 @@ export async function exportCustomersReport(): Promise<CustomerReportRow[]> {
       .from('cards')
       .select('card_uid, customer_id')
       .not('customer_id', 'is', null),
+    supabase
+      .from('loyalty_accounts')
+      .select('customer_id, points_balance, lifetime_points, referral_code'),
   ])
 
   const profiles = profilesRes.data ?? []
   const subs = (subsRes.data ?? []) as unknown as SubRow[]
   const reds = redsRes.data ?? []
   const cards = (cardsRes.data ?? []) as { card_uid: string; customer_id: string }[]
+  const loyalty = (loyaltyRes.data ?? []) as {
+    customer_id: string
+    points_balance: number
+    lifetime_points: number
+    referral_code: string | null
+  }[]
+  const loyaltyByCustomer = new Map(loyalty.map(row => [row.customer_id, row]))
 
   // A customer may hold more than one card; list them all so the export shows
   // every UID linked to that person (blank/no-card customers get "-" in the UI).
@@ -96,6 +110,7 @@ export async function exportCustomersReport(): Promise<CustomerReportRow[]> {
 
   return profiles.map(p => {
     const sub = latestByCustomer.get(p.id)
+    const account = loyaltyByCustomer.get(p.id)
     if (!sub) {
       return {
         full_name: p.full_name || '—',
@@ -109,6 +124,10 @@ export async function exportCustomersReport(): Promise<CustomerReportRow[]> {
         total_cups: null,
         consumption_pct: null,
         card_uid: cardUidFor(p.id),
+        birth_date: p.birth_date ?? null,
+        points_balance: account?.points_balance ?? 0,
+        lifetime_points: account?.lifetime_points ?? 0,
+        referral_code: account?.referral_code ?? null,
       }
     }
 
@@ -131,6 +150,10 @@ export async function exportCustomersReport(): Promise<CustomerReportRow[]> {
       total_cups: totalCups,
       consumption_pct: consumptionPct,
       card_uid: cardUidFor(p.id),
+      birth_date: p.birth_date ?? null,
+      points_balance: account?.points_balance ?? 0,
+      lifetime_points: account?.lifetime_points ?? 0,
+      referral_code: account?.referral_code ?? null,
     }
   })
 }

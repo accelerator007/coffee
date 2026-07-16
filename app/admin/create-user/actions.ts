@@ -8,6 +8,8 @@ export async function createCustomer(data: {
   full_name: string
   phone: string
   password: string
+  birth_date?: string
+  referral_code?: string
 }) {
   if (!(await hasCurrentUserRole('admin'))) return { error: 'not_authorized' }
 
@@ -17,6 +19,19 @@ export async function createCustomer(data: {
   if (!fullName) return { error: 'الاسم مطلوب' }
   const phone = normalized.international
   const email = `${phone}@phone.local`
+  const referralCode = data.referral_code?.trim().toUpperCase() || ''
+  let referrerId: string | null = null
+
+  if (referralCode) {
+    const { data: referrer } = await adminClient
+      .from('loyalty_accounts')
+      .select('customer_id, referral_code')
+      .eq('referral_code', referralCode)
+      .maybeSingle()
+
+    if (!referrer) return { error: 'كود الإحالة غير موجود' }
+    referrerId = referrer.customer_id
+  }
 
   const { data: created, error } = await adminClient.auth.admin.createUser({
     email,
@@ -26,11 +41,40 @@ export async function createCustomer(data: {
     user_metadata: {
       full_name: fullName,
       phone,
+      birth_date: data.birth_date || null,
     },
   })
 
   if (error) return { error: error.message }
-  return { success: true, userId: created.user?.id }
+
+  const userId = created.user?.id
+  if (!userId) return { error: 'تعذّر إنشاء الحساب' }
+
+  const birthDate = data.birth_date?.trim() || null
+  if (birthDate) {
+    await adminClient.from('profiles').update({ birth_date: birthDate }).eq('id', userId)
+  }
+
+  if (referralCode && referrerId) {
+    if (referrerId === userId) return { error: 'لا يمكن استخدام كود نفس العميل' }
+
+    await adminClient.rpc('ensure_loyalty_account', { p_customer: userId })
+    const { error: accountError } = await adminClient
+      .from('loyalty_accounts')
+      .update({ referred_by: referrerId, updated_at: new Date().toISOString() })
+      .eq('customer_id', userId)
+    if (accountError) return { error: accountError.message }
+
+    const { error: referralError } = await adminClient.from('referrals').insert({
+      referrer_id: referrerId,
+      referred_customer_id: userId,
+      referral_code: referralCode,
+      status: 'pending',
+    })
+    if (referralError) return { error: referralError.message }
+  }
+
+  return { success: true, userId }
 }
 
 export async function createEmployee(data: {

@@ -10,6 +10,7 @@ import SubscriptionCard from '@/components/dashboard/SubscriptionCard'
 import DailyAllowance from '@/components/dashboard/DailyAllowance'
 import QRCodeDisplay from '@/components/dashboard/QRCode'
 import HighlightsStrip from '@/components/dashboard/HighlightsStrip'
+import LoyaltyRewards from '@/components/dashboard/LoyaltyRewards'
 import Badge from '@/components/ui/Badge'
 import DashboardClient from './DashboardClient'
 
@@ -30,12 +31,25 @@ export default async function DashboardPage() {
   const fullName = user.user_metadata?.full_name as string | undefined
 
   // Subscription days_left is computed in SQL with Asia/Muscat timezone.
-  const { data: subRaw } = await supabase.rpc('get_my_subscription').maybeSingle()
+  const [subRes, loyaltyRes, offersRes, notificationsRes] = await Promise.all([
+    supabase.rpc('get_my_subscription').maybeSingle(),
+    supabase.rpc('get_my_loyalty_summary').maybeSingle(),
+    supabase.rpc('get_active_offers'),
+    supabase
+      .from('notifications')
+      .select('id, title_ar, title_en, body_ar, body_en, kind, read_at, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5),
+  ])
+  const subRaw = subRes.data
   const sub = subRaw as {
     id: string; package_id: string; package_name: string; tier: string | null;
     duration_days: number; daily_allowance: number;
     start_date: string; days_left: number; status: string;
   } | null
+  const loyalty = loyaltyRes.data as never
+  const offers = (offersRes.data ?? []) as never[]
+  const notifications = (notificationsRes.data ?? []) as never[]
 
   let todayUsed = 0
   if (sub) {
@@ -85,6 +99,13 @@ export default async function DashboardPage() {
               </Card>
             </section>
 
+            <LoyaltyRewards
+              lang={lang}
+              summary={loyalty}
+              offers={offers}
+              notifications={notifications}
+            />
+
             {/* QR */}
             <Card variant="feature" className="text-center flex flex-col items-center">
               <QRCodeDisplay value={user.id} />
@@ -102,6 +123,14 @@ export default async function DashboardPage() {
               </p>
               <p className="text-text-muted text-sm mt-2">{t('contactToSubscribe', lang)}</p>
             </Card>
+            <div className="mt-5">
+              <LoyaltyRewards
+                lang={lang}
+                summary={loyalty}
+                offers={offers}
+                notifications={notifications}
+              />
+            </div>
           </div>
         )}
 
