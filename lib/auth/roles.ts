@@ -28,16 +28,20 @@ export async function getCurrentUserContext(): Promise<CurrentUserContext | null
 
   if (!claims || typeof claims.sub !== 'string') return null
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('role, full_name')
     .eq('id', claims.sub)
     .maybeSingle()
 
+  // If the signed token outlives a deleted profile/auth row, treat it as
+  // unauthorized immediately instead of trusting stale JWT metadata.
+  if (!profile && !profileError) return null
+
   let role: AppRole | null = null
   if (isAppRole(profile?.role)) role = profile.role
 
-  if (!role) {
+  if (!role && profileError) {
     const metadataRole = (claims.app_metadata as { role?: unknown } | undefined)?.role
     if (isAppRole(metadataRole)) role = metadataRole
   }
