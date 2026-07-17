@@ -2,12 +2,13 @@
 
 import { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import { QrCode, Nfc, ScanLine, TriangleAlert, CircleCheck } from 'lucide-react'
+import { QrCode, Nfc, ScanLine, TriangleAlert, CircleCheck, Star } from 'lucide-react'
 import { Lang, t } from '@/lib/i18n'
-import { getCustomerByQR, nfcRedeem, recordRedemption } from '@/app/scan/actions'
+import { getCustomerByQR, nfcRedeem, recordRedemption, awardWalkInPoints } from '@/app/scan/actions'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
 import SegmentedTabs from '@/components/ui/SegmentedTabs'
 import NFCScanner from './NFCScanner'
 
@@ -15,7 +16,7 @@ const QRScanner = dynamic(() => import('./QRScanner'), { ssr: false })
 
 type CustomerData = Awaited<ReturnType<typeof getCustomerByQR>>
 type Tab = 'qr' | 'nfc'
-type State = 'scanning' | 'loading' | 'result' | 'success' | 'nfc_success' | 'error'
+type State = 'scanning' | 'loading' | 'result' | 'success' | 'points_success' | 'nfc_success' | 'error'
 type NFCResult = { customerName: string; packageName: string; remaining: number; daysLeft: number; pointsEarned?: number }
 
 export default function ScanClient({ lang }: { lang: Lang }) {
@@ -26,6 +27,8 @@ export default function ScanClient({ lang }: { lang: Lang }) {
   const [pointsEarned, setPointsEarned] = useState(0)
   const [errorMsg, setErrorMsg] = useState('')
   const [recording, setRecording] = useState(false)
+  const [quantity, setQuantity] = useState('1')
+  const [awarding, setAwarding] = useState(false)
   const ar = lang === 'ar'
 
   const handleScan = useCallback(async (value: string) => {
@@ -92,11 +95,41 @@ export default function ScanClient({ lang }: { lang: Lang }) {
     }
   }
 
+  async function handleAward() {
+    if (!data?.customer) return
+    const qty = parseInt(quantity, 10)
+    if (!Number.isFinite(qty) || qty < 1 || qty > 20) {
+      setErrorMsg(ar ? 'أدخل عدداً بين 1 و20' : 'Enter a number between 1 and 20')
+      setState('error')
+      return
+    }
+    setAwarding(true)
+    try {
+      const result = await awardWalkInPoints(data.customer.id, qty)
+      setAwarding(false)
+      if ('error' in result) {
+        if (result.error === 'not_authorized') setErrorMsg(ar ? 'غير مصرّح' : 'Not authorized')
+        else if (result.error === 'invalid_quantity') setErrorMsg(ar ? 'العدد غير صحيح' : 'Invalid quantity')
+        else if (result.error === 'invalid_qr') setErrorMsg(t('invalidQR', lang))
+        else setErrorMsg(t('error', lang))
+        setState('error')
+      } else {
+        setPointsEarned(result.pointsEarned ?? 0)
+        setState('points_success')
+      }
+    } catch {
+      setAwarding(false)
+      setErrorMsg(ar ? 'حدث خطأ، حاول مجدداً' : 'Something went wrong, try again')
+      setState('error')
+    }
+  }
+
   function reset() {
     setState('scanning')
     setData(null)
     setNfcResult(null)
     setPointsEarned(0)
+    setQuantity('1')
     setErrorMsg('')
   }
 
@@ -194,8 +227,22 @@ export default function ScanClient({ lang }: { lang: Lang }) {
     )
   }
 
+  if (state === 'points_success') {
+    return (
+      <Card variant="feature" className="flex flex-col items-center gap-4 py-10 text-center animate-fade-up">
+        <Star size={80} strokeWidth={1.5} className="text-foreground" aria-hidden />
+        <h3 className="text-xl font-semibold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>{t('pointsAwarded', lang)}</h3>
+        <Badge variant="success" dot>
+          +{pointsEarned} {ar ? 'نقطة ولاء' : 'loyalty points'}
+        </Badge>
+        <Button onClick={reset}>{t('scanAgain', lang)}</Button>
+      </Card>
+    )
+  }
+
   // state === 'result'
   if (!data?.customer) return null
+  const hasSubscription = !!data.subscription
   const pkg = data.subscription?.packages as { name: string; daily_allowance: number } | undefined
   const isActive = (data.daysLeft ?? 0) > 0
   const remaining = pkg ? (pkg.daily_allowance - (data.todayUsed ?? 0)) : 0
@@ -222,9 +269,13 @@ export default function ScanClient({ lang }: { lang: Lang }) {
           )}
           <div className="flex justify-between items-center">
             <span className="text-text-muted">{lang === 'ar' ? 'الحالة' : 'Status'}</span>
-            <Badge status={isActive ? 'active' : 'expired'} label={t(isActive ? 'active' : 'expired', lang)} />
+            {hasSubscription ? (
+              <Badge status={isActive ? 'active' : 'expired'} label={t(isActive ? 'active' : 'expired', lang)} />
+            ) : (
+              <Badge variant="neutral">{t('pointsOnlyCustomer', lang)}</Badge>
+            )}
           </div>
-          {isActive && (
+          {hasSubscription && isActive && (
             <>
               <div className="flex justify-between items-center">
                 <span className="text-text-muted">{t('daysLeft', lang)}</span>
@@ -241,16 +292,42 @@ export default function ScanClient({ lang }: { lang: Lang }) {
         </div>
       </Card>
 
-      <div className="flex gap-3">
-        <Button onClick={handleRecord} loading={recording} disabled={!canRedeem} className="flex-1">
-          <ScanLine size={18} aria-hidden />
-          {t('recordRedemption', lang)}
-        </Button>
-        <Button onClick={reset} variant="secondary">{t('scanAgain', lang)}</Button>
-      </div>
+      {hasSubscription ? (
+        <>
+          <div className="flex gap-3">
+            <Button onClick={handleRecord} loading={recording} disabled={!canRedeem} className="flex-1">
+              <ScanLine size={18} aria-hidden />
+              {t('recordRedemption', lang)}
+            </Button>
+            <Button onClick={reset} variant="secondary">{t('scanAgain', lang)}</Button>
+          </div>
 
-      {!canRedeem && isActive && remaining === 0 && (
-        <p className="text-center text-sm text-danger">{t('limitReached', lang)}</p>
+          {!canRedeem && isActive && remaining === 0 && (
+            <p className="text-center text-sm text-danger">{t('limitReached', lang)}</p>
+          )}
+        </>
+      ) : (
+        <Card className="flex flex-col gap-3">
+          <p className="text-sm text-text-muted">{t('enterQuantity', lang)}</p>
+          <Input
+            label={t('itemsCount', lang)}
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={20}
+            value={quantity}
+            onChange={e => setQuantity(e.target.value)}
+            disabled={awarding}
+            ltr
+          />
+          <div className="flex gap-3">
+            <Button onClick={handleAward} loading={awarding} disabled={awarding} className="flex-1">
+              <Star size={18} aria-hidden />
+              {t('awardPoints', lang)}
+            </Button>
+            <Button onClick={reset} variant="secondary">{t('scanAgain', lang)}</Button>
+          </div>
+        </Card>
       )}
     </div>
   )

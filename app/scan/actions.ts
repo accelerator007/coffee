@@ -180,6 +180,35 @@ export async function nfcRedeem(nfcCardId: string) {
   }
 }
 
+/**
+ * Award loyalty points to a points-only customer (no subscription) after a
+ * walk-in purchase. Staff scans the customer QR and enters the item quantity.
+ * The database function verifies the caller is staff and applies tier/day
+ * multipliers, so this action just forwards validated input.
+ */
+export async function awardWalkInPoints(customerId: string, quantity: number) {
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!uuidPattern.test(customerId)) return { error: 'invalid_qr' as const }
+
+  const qty = Math.floor(quantity)
+  if (!Number.isFinite(qty) || qty < 1 || qty > 20) return { error: 'invalid_quantity' as const }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc('staff_award_points', {
+    p_customer: customerId,
+    p_quantity: qty,
+  })
+
+  if (error) {
+    if (error.message.includes('forbidden')) return { error: 'not_authorized' as const }
+    if (error.message.includes('customer_not_found')) return { error: 'invalid_qr' as const }
+    if (error.message.includes('invalid_quantity')) return { error: 'invalid_quantity' as const }
+    return { error: 'db_error' as const }
+  }
+
+  return { success: true, pointsEarned: (data as number) ?? 0 }
+}
+
 export async function recordRedemption(subscriptionId: string, customerId: string) {
   const supabase = await createClient()
 

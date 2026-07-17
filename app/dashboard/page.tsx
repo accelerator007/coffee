@@ -90,14 +90,6 @@ export default async function DashboardPage() {
               offers={offers}
               notifications={notifications}
             />
-
-            {/* QR */}
-            <Card variant="feature" className="text-center flex flex-col items-center">
-              <QRCodeDisplay value={currentUser.id} />
-              <p className="text-[15px] font-semibold text-foreground mt-4 mb-1">{t('scanToRedeem', lang)}</p>
-              <p className="text-[13px] text-text-muted mb-3.5">{t('showToStaff', lang)}</p>
-              <Badge variant="neutral">{code}</Badge>
-            </Card>
           </div>
         ) : (
           <div className="px-[18px] mt-3">
@@ -118,6 +110,16 @@ export default async function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* QR — every customer's identity, whether points-only or subscribed */}
+        <div className="px-[18px] mt-5">
+          <Card variant="feature" className="text-center flex flex-col items-center">
+            <QRCodeDisplay value={currentUser.id} />
+            <p className="text-[15px] font-semibold text-foreground mt-4 mb-1">{t('scanToRedeem', lang)}</p>
+            <p className="text-[13px] text-text-muted mb-3.5">{t('showToStaff', lang)}</p>
+            <Badge variant="neutral">{code}</Badge>
+          </Card>
+        </div>
 
         {/* Feed */}
         <section className="mt-6">

@@ -6,12 +6,15 @@ import Logo from '@/components/ui/Logo'
 import Card from '@/components/ui/Card'
 import SegmentedTabs from '@/components/ui/SegmentedTabs'
 import PhoneLoginForm from '@/components/auth/PhoneLoginForm'
+import CustomerRegisterForm from '@/components/auth/CustomerRegisterForm'
 import StaffLoginForm from '@/components/auth/StaffLoginForm'
 
 type Tab = 'customer' | 'staff'
+type CustomerMode = 'login' | 'register'
 
 export default function LoginClient() {
   const [tab, setTab] = useState<Tab>('customer')
+  const [customerMode, setCustomerMode] = useState<CustomerMode>('login')
   const [lang, setLang] = useState<Lang>('ar')
 
   useEffect(() => {
@@ -66,7 +69,20 @@ export default function LoginClient() {
             ]}
           />
 
-          {tab === 'customer' ? <PhoneLoginForm lang={lang} /> : <StaffLoginForm lang={lang} />}
+          {tab === 'customer' ? (
+            <>
+              {customerMode === 'login' ? <PhoneLoginForm lang={lang} /> : <CustomerRegisterForm lang={lang} />}
+              <button
+                type="button"
+                onClick={() => setCustomerMode(m => (m === 'login' ? 'register' : 'login'))}
+                className="text-[13px] font-bold text-brand hover:underline text-center m-0"
+              >
+                {customerMode === 'login' ? t('noAccountYet', lang) : t('alreadyHaveAccount', lang)}
+              </button>
+            </>
+          ) : (
+            <StaffLoginForm lang={lang} />
+          )}
 
           <p className="text-[13px] text-text-muted text-center m-0">
             {lang === 'ar' ? brand.beansAr : t('beansBy', lang)}
