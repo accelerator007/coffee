@@ -25,19 +25,22 @@ export default async function AdminPage() {
 
   const fullName = currentUser.fullName
 
-  const [kpisRes, byPackageRes, trendRes] = await Promise.all([
-    supabase.rpc('admin_overview_kpis'),
-    supabase.rpc('admin_subscriptions_by_package'),
-    supabase.rpc('admin_redemptions_last_7_days'),
-  ]).catch(() => [null, null, null] as const)
+  const { data: summaryData } = await supabase
+    .rpc('admin_dashboard_summary')
+    .maybeSingle()
 
-  const kpisRows = Array.isArray(kpisRes?.data) ? kpisRes.data : []
-  const kpis = kpisRows[0] as {
+  const summary = summaryData as {
+    kpis?: unknown
+    by_package?: unknown[]
+    trend?: unknown[]
+  } | null
+
+  const kpis = summary?.kpis as {
     total_subscribers: number; active_subscribers: number; expired_subscribers: number;
     total_redemptions: number; avg_redemptions_per_subscriber: number; total_revenue: number;
   } | undefined
-  const byPackage = Array.isArray(byPackageRes?.data) ? byPackageRes.data : []
-  const trend = Array.isArray(trendRes?.data) ? trendRes.data : []
+  const byPackage = (Array.isArray(summary?.by_package) ? summary.by_package : []) as never[]
+  const trend = (Array.isArray(summary?.trend) ? summary.trend : []) as never[]
 
   const navLink = 'text-sm font-bold px-4 py-1.5 rounded-full transition-colors'
 

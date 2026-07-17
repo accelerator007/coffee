@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Lang, t, brand } from '@/lib/i18n'
 import Logo from '@/components/ui/Logo'
 import Card from '@/components/ui/Card'
@@ -13,6 +13,11 @@ type Tab = 'customer' | 'staff'
 export default function LoginClient() {
   const [tab, setTab] = useState<Tab>('customer')
   const [lang, setLang] = useState<Lang>('ar')
+
+  useEffect(() => {
+    document.documentElement.lang = lang
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
+  }, [lang])
 
   function toggleLang() {
     setLang(current => {

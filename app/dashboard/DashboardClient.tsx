@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Lang } from '@/lib/i18n'
 import Header from '@/components/layout/Header'
@@ -15,12 +15,15 @@ export default function DashboardClient({
   const router = useRouter()
   const [lang, setLang] = useState<Lang>(initialLang)
 
+  useEffect(() => {
+    document.documentElement.lang = lang
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
+  }, [lang])
+
   function toggleLang() {
     const next: Lang = lang === 'ar' ? 'en' : 'ar'
     setLang(next)
     document.cookie = `lang=${next};path=/;max-age=31536000;samesite=lax`
-    document.documentElement.lang = next
-    document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr'
     router.refresh()
   }
 

@@ -57,10 +57,10 @@
   --action-primary:  #000000;
   --action-primary-press: #333333;
 
-  /* --- Type families (composed from the next/font variables set in layout) --- */
-  --font-display: var(--font-playfair), var(--font-amiri), Georgia, serif;
-  --font-heading: var(--font-playfair), var(--font-amiri), Georgia, serif;
-  --font-body:    var(--font-inter), var(--font-almarai), system-ui, sans-serif;
+  /* --- Type families: system stacks keep first load lean and avoid font preloads. --- */
+  --font-display: ui-serif, Georgia, "Times New Roman", "Noto Naskh Arabic", serif;
+  --font-heading: var(--font-display);
+  --font-body:    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Tahoma", "Arial", sans-serif;
 
   /* --- Type scale & roles (mobile-first) --- */
   --fs-display: 38px;

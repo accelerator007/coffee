@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type AppRole = 'admin' | 'employee' | 'customer'
@@ -21,7 +22,7 @@ export function isAppRole(value: unknown): value is AppRole {
  * avoids a Server Component redirect loop caused by auth.getUser() attempting
  * session refresh/cookie writes during page rendering.
  */
-export async function getCurrentUserContext(): Promise<CurrentUserContext | null> {
+export const getCurrentUserContext = cache(async (): Promise<CurrentUserContext | null> => {
   const supabase = await createClient()
   const { data } = await supabase.auth.getClaims()
   const claims = data?.claims
@@ -54,7 +55,7 @@ export async function getCurrentUserContext(): Promise<CurrentUserContext | null
     role,
     fullName: profile?.full_name || (typeof metadataName === 'string' ? metadataName : undefined),
   }
-}
+})
 
 export async function getCurrentUserRole(): Promise<AppRole | null> {
   return (await getCurrentUserContext())?.role ?? null

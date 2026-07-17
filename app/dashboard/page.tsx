@@ -15,10 +15,6 @@ import LoyaltyRewards from '@/components/dashboard/LoyaltyRewards'
 import Badge from '@/components/ui/Badge'
 import DashboardClient from './DashboardClient'
 
-function getMuscatDate() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Muscat' })
-}
-
 export default async function DashboardPage() {
   const currentUser = await getCurrentUserContext()
   if (!currentUser) redirect('/login')
@@ -31,37 +27,25 @@ export default async function DashboardPage() {
 
   const fullName = currentUser.fullName
 
-  // Subscription days_left is computed in SQL with Asia/Muscat timezone.
-  const [subRes, loyaltyRes, offersRes, notificationsRes] = await Promise.all([
-    supabase.rpc('get_my_subscription').maybeSingle(),
-    supabase.rpc('get_my_loyalty_summary').maybeSingle(),
-    supabase.rpc('get_active_offers'),
-    supabase
-      .from('notifications')
-      .select('id, title_ar, title_en, body_ar, body_en, kind, read_at, created_at')
-      .order('created_at', { ascending: false })
-      .limit(5),
-  ])
-  const subRaw = subRes.data
+  const { data: dashboardData } = await supabase.rpc('get_customer_dashboard').maybeSingle()
+  const dashboard = dashboardData as {
+    subscription: unknown | null
+    loyalty: unknown | null
+    offers: unknown[] | null
+    notifications: unknown[] | null
+    today_used: number | null
+  } | null
+
+  const subRaw = dashboard?.subscription ?? null
   const sub = subRaw as {
     id: string; package_id: string; package_name: string; tier: string | null;
     duration_days: number; daily_allowance: number;
     start_date: string; days_left: number; status: string;
   } | null
-  const loyalty = loyaltyRes.data as never
-  const offers = (offersRes.data ?? []) as never[]
-  const notifications = (notificationsRes.data ?? []) as never[]
-
-  let todayUsed = 0
-  if (sub) {
-    const today = getMuscatDate()
-    const { count } = await supabase
-      .from('redemptions')
-      .select('*', { count: 'exact', head: true })
-      .eq('subscription_id', sub.id)
-      .eq('day', today)
-    todayUsed = count ?? 0
-  }
+  const loyalty = dashboard?.loyalty as never
+  const offers = (dashboard?.offers ?? []) as never[]
+  const notifications = (dashboard?.notifications ?? []) as never[]
+  const todayUsed = dashboard?.today_used ?? 0
 
   const code = `D7-${currentUser.id.slice(0, 4).toUpperCase()}-${currentUser.id.slice(-4).toUpperCase()}`
 

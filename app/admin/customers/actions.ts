@@ -1,6 +1,5 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { adminClient } from '@/lib/supabase/admin'
 import { hasCurrentUserRole } from '@/lib/auth/roles'
 import { normalizeOmanPhone, phoneAuthEmail } from '@/lib/phone'
@@ -48,68 +47,37 @@ export async function deleteCustomer(id: string) {
 }
 
 export async function searchCustomers(q: string) {
-  const supabase = await createClient()
+  if (!(await hasCurrentUserRole('admin'))) return []
 
-  // Get all customers from profiles directly. The fallback keeps the current
-  // customers page usable while the loyalty migration is being applied.
-  let profileQuery = supabase
-    .from('profiles')
-    .select('id, full_name, phone, birth_date, created_at')
-    .eq('role', 'customer')
-    .order('created_at', { ascending: false })
+  const { data } = await adminClient.rpc('admin_customer_search', { search: q || null })
 
-  if (q) {
-    profileQuery = profileQuery.or(`full_name.ilike.%${q}%,phone.ilike.%${q}%`)
+  type CustomerSearchRow = {
+    id: string
+    full_name: string
+    phone: string | null
+    birth_date: string | null
+    points_balance: number | null
+    lifetime_points: number | null
+    referral_code: string | null
+    package_name: string | null
+    tier: string | null
+    status: string | null
+    days_left: number | null
+    times_used: number | null
   }
 
-  const { data: profileRows, error: profileError } = await profileQuery
-  let profiles = profileRows
-
-  if (profileError) {
-    let fallbackQuery = supabase
-      .from('profiles')
-      .select('id, full_name, phone, created_at')
-      .eq('role', 'customer')
-      .order('created_at', { ascending: false })
-
-    if (q) {
-      fallbackQuery = fallbackQuery.or(`full_name.ilike.%${q}%,phone.ilike.%${q}%`)
-    }
-
-    const fallback = await fallbackQuery
-    profiles = (fallback.data ?? []).map(p => ({ ...p, birth_date: null }))
-  }
-
-  const { data: loyaltyRows } = await supabase
-    .from('loyalty_accounts')
-    .select('customer_id, points_balance, lifetime_points, referral_code')
-
-  const loyaltyByCustomer = new Map(
-    (loyaltyRows ?? []).map(row => [row.customer_id, row])
-  )
-
-  // Enrich with subscription data from RPC
-  const { data: rpcData } = await supabase.rpc('admin_customer_detail', { search: q || null })
-  const rpcMap = new Map((rpcData ?? []).map((r: { customer_id: string }) => [r.customer_id, r]))
-
-  return (profiles ?? []).map((p) => {
-    const rpc = rpcMap.get(p.id) as {
-      package_name?: string; tier?: string | null; status?: string; days_left?: number; times_used?: number
-    } | undefined
-    const account = loyaltyByCustomer.get(p.id)
-    return {
-      id: p.id,
-      full_name: p.full_name,
-      phone: p.phone,
-      birth_date: p.birth_date ?? null,
-      points_balance: account?.points_balance ?? 0,
-      lifetime_points: account?.lifetime_points ?? 0,
-      referral_code: account?.referral_code ?? null,
-      package_name: rpc?.package_name ?? null,
-      tier: rpc?.tier ?? null,
-      status: (rpc?.status ?? null) as 'active' | 'expired' | null,
-      days_left: rpc?.days_left ?? null,
-      times_used: rpc?.times_used ?? null,
-    }
-  })
+  return ((data ?? []) as CustomerSearchRow[]).map(row => ({
+    id: row.id,
+    full_name: row.full_name,
+    phone: row.phone,
+    birth_date: row.birth_date ?? null,
+    points_balance: row.points_balance ?? 0,
+    lifetime_points: row.lifetime_points ?? 0,
+    referral_code: row.referral_code ?? null,
+    package_name: row.package_name ?? null,
+    tier: row.tier ?? null,
+    status: (row.status ?? null) as 'active' | 'expired' | null,
+    days_left: row.days_left ?? null,
+    times_used: row.times_used ?? 0,
+  }))
 }

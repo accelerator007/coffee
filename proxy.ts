@@ -17,6 +17,18 @@ function clearSupabaseCookies(request: NextRequest, response: NextResponse) {
 }
 
 export async function proxy(request: NextRequest) {
+  const path = request.nextUrl.pathname
+  const hasSupabaseSessionCookie = request.cookies
+    .getAll()
+    .some(cookie => cookie.name.startsWith('sb-') && cookie.value)
+
+  if (!hasSupabaseSessionCookie) {
+    if (path === '/login' || path === '/') {
+      return NextResponse.next({ request })
+    }
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -37,7 +49,6 @@ export async function proxy(request: NextRequest) {
 
   const { data } = await supabase.auth.getClaims()
   const claims = data?.claims
-  const path = request.nextUrl.pathname
 
   if (!claims) {
     if (path === '/login' || path === '/') return supabaseResponse
