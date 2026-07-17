@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import type { Html5Qrcode } from 'html5-qrcode'
 
 interface Props {
   onScan: (value: string) => void
@@ -9,7 +8,7 @@ interface Props {
 }
 
 export default function QRScanner({ onScan, onError }: Props) {
-  const scannerRef = useRef<Html5Qrcode | null>(null)
+  const scannerRef = useRef<{ stop: () => Promise<void>; clear: () => void } | null>(null)
   const divId = 'qr-reader'
 
   useEffect(() => {
