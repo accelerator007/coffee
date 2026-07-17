@@ -1,5 +1,6 @@
 'use server'
 
+import { createClient } from '@/lib/supabase/server'
 import { adminClient } from '@/lib/supabase/admin'
 import { hasCurrentUserRole } from '@/lib/auth/roles'
 import { normalizeOmanPhone, phoneAuthEmail } from '@/lib/phone'
@@ -49,7 +50,8 @@ export async function deleteCustomer(id: string) {
 export async function searchCustomers(q: string) {
   if (!(await hasCurrentUserRole('admin'))) return []
 
-  const { data } = await adminClient.rpc('admin_customer_search', { search: q || null })
+  const supabase = await createClient()
+  const { data } = await supabase.rpc('admin_customer_search', { search: q || null })
 
   type CustomerSearchRow = {
     id: string
