@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Html5Qrcode } from 'html5-qrcode'
+import type { Html5Qrcode } from 'html5-qrcode'
 
 interface Props {
   onScan: (value: string) => void
@@ -13,23 +13,42 @@ export default function QRScanner({ onScan, onError }: Props) {
   const divId = 'qr-reader'
 
   useEffect(() => {
-    const scanner = new Html5Qrcode(divId)
-    scannerRef.current = scanner
+    let cancelled = false
+    let started = false
 
-    scanner.start(
-      { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 250, height: 250 } },
-      (decodedText) => {
-        onScan(decodedText)
-        scanner.stop().catch(() => {})
-      },
-      () => {}
-    ).catch((err: unknown) => {
-      onError?.(String(err))
-    })
+    async function startScanner() {
+      try {
+        const { Html5Qrcode } = await import('html5-qrcode')
+        if (cancelled) return
+
+        const scanner = new Html5Qrcode(divId)
+        scannerRef.current = scanner
+
+        await scanner.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => {
+            onScan(decodedText)
+            scanner.stop().catch(() => {})
+          },
+          () => {}
+        )
+        started = true
+      } catch (err: unknown) {
+        if (!cancelled) onError?.(String(err))
+      }
+    }
+
+    startScanner()
 
     return () => {
-      scanner.stop().catch(() => {})
+      cancelled = true
+      if (started) scannerRef.current?.stop().catch(() => {})
+      try {
+        scannerRef.current?.clear()
+      } catch {
+        // Ignore cleanup errors from scanner instances that never fully mounted.
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

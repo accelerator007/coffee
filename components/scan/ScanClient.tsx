@@ -19,7 +19,7 @@ type State = 'scanning' | 'loading' | 'result' | 'success' | 'nfc_success' | 'er
 type NFCResult = { customerName: string; packageName: string; remaining: number; daysLeft: number; pointsEarned?: number }
 
 export default function ScanClient({ lang }: { lang: Lang }) {
-  const [tab, setTab] = useState<Tab>('qr')
+  const [tab, setTab] = useState<Tab>('nfc')
   const [state, setState] = useState<State>('scanning')
   const [data, setData] = useState<CustomerData | null>(null)
   const [nfcResult, setNfcResult] = useState<NFCResult | null>(null)

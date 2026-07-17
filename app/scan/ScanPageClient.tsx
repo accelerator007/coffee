@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Lang } from '@/lib/i18n'
 import Header from '@/components/layout/Header'
@@ -8,6 +8,11 @@ import Header from '@/components/layout/Header'
 export default function ScanPageClient({ userName, lang: initialLang }: { userName?: string; lang: Lang }) {
   const router = useRouter()
   const [lang, setLang] = useState<Lang>(initialLang)
+
+  useEffect(() => {
+    document.documentElement.lang = initialLang
+    document.documentElement.dir = initialLang === 'ar' ? 'rtl' : 'ltr'
+  }, [initialLang])
 
   function toggleLang() {
     const next: Lang = lang === 'ar' ? 'en' : 'ar'
